@@ -98,7 +98,7 @@
 			<conditional name="plotThreshold">
 				<param name="plotThresholdChoice" type="boolean" display="checkboxes" truevalue="True" falsevalue="False" checked="false" label="Plot Options: Modify y axis range of the normalized counts of bio-features" help="Ignore if you did not choose the histograms output file"/>
 					<when value="True">
-						<param name="yMin" type="float" value="-2.0" label="y min"/>
+						<param name="yMin" type="float" value="0.0" label="y min"/>
 						<param name="yMax" type="float" value="2.0" label="y max"/>
 					</when>
 			</conditional>
