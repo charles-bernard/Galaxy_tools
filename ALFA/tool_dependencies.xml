@@ -1,6 +1,6 @@
 <tool_dependency>
-	<package name="bedtools" />
-    <package name="samtools" />
+	<package name="bedtools" version="2.22" />
+    <package name="samtools" version="1.2" />
     <package name="matplotlib" version="1.5.3" />
 </tool_dependency>
 
