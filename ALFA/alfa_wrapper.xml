@@ -9,7 +9,7 @@
   	</requirements>
 
   	<command interpreter="bash">
-  		alfa_wrapper.sh ${ALFA_config} $logReport
+  		alfa_wrapper.sh $__root_dir__ $__tool_directory__ $ALFA_config $logReport
   	</command>	
 	
 	<inputs>
