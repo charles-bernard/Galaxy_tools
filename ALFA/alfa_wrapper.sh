@@ -3,8 +3,10 @@
 #########################################################################################################
 # ARGUMENTS FROM alfa_wrapper.xml                                                                       #
 #########################################################################################################
-configFile=$1;
-logReport=$2;
+galaxyRoot=$1;
+toolDir=$2
+configFile=$3;
+logReport=$4;
 sed -i -e '/^$/d; s/\t//g;' $configFile;
 printf "__________________________________________________________________\n\n" > $logReport
 printf "                          ALFA CONFIG                             \n" >> $logReport
@@ -68,7 +70,7 @@ fi
 #########################################################################################################
 # CREATION OF A TMP DIRECTORY FOR THE OUTPUT FILES OF ALFA AND cd                                       #
 #########################################################################################################
-outputDirectory=`mktemp -d /export/home1/users/biocomp/chbernar/galaxy/database/tmp/tmpXXXXXX`;
+outputDirectory=`mktemp -d "$galaxyRoot"/database/tmp/tmpXXXXXX`;
 if [ -d $outputDirectory ]; then
 	chmod -R ugo+wrx $outputDirectory;
 	rm -R $outputDirectory;
@@ -115,7 +117,7 @@ done
 #########################################################################################################
 # DETERMINATION OF THE APPROPRIATE SCRIPTS ARGUMENTS                                                    #
 #########################################################################################################
-scriptPath="/export/home1/users/biocomp/chbernar/galaxy/tools/alfa/";
+scriptPath="$toolDir/";
 if [ "$annotationSource" == "index" ]; then
 	scriptInput="-g $index -i ""$readsInput";
 elif [ "$annotationSource" == "built_in_index" ]; then
