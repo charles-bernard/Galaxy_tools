@@ -3,9 +3,9 @@
 
 	<!-- ALFA requires bedtools suite v2.20.0 and above -->
 	<requirements>
-    	<requirement type="package">bedtools</requirement>
-    	<requirement type="package">samtools</requirement>
-    	<requirement type="package" version="1.5.3">matplotlib</requirement>
+    	<requirement type="package" version="2.24">bedtools</requirement>
+    	<requirement type="package" version="1.2">samtools</requirement>
+    	<requirement type="package" version="1.4">matplotlib</requirement>
   	</requirements>
 
   	<command interpreter="bash">
