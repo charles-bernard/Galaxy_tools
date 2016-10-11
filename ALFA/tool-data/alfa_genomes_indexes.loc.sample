@@ -1,0 +1,5 @@
+#<species>	<version>	<release>	<value>	<dbkey>	<name>	<prefix>
+Arabidopsis_thaliana	TAIR10	30	Arabidopsis_t_TAIR10_30	Arabidopsis_t_TAIR10_30	Arabidopsis thaliana: TAIR10	/export/home1/users/biocomp/chbernar/data/alfa_indexes/Arabidopsis_thaliana.TAIR10.30
+Drosophila_melanogaster	dm6	30	Drosophila_m_dm6_30	Drosophila_m_dm6_30	Drosophila melanogaster: dm6	/export/home1/users/biocomp/chbernar/data/alfa_indexes/Drosophila_melanogaster.BDGP6.30
+Homo_sapiens	v38	82	Homo_s_v38_82	Homo_s_v38_82	Homo sapiens: v38	/export/home1/users/biocomp/chbernar/data/alfa_indexes/Homo_sapiens.GRCh38.82
+Mus_musculus	v38	83	Mus_m_v38_83	Mus_m_v38_83	Mus musculus: v38 	/export/home1/users/biocomp/chbernar/data/alfa_indexes/Mus_musculus.GRCm38.83.chr

@@ -1,4 +1,0 @@
-#<species>	<version>	<release_name>	<format>	<value>	<dbkey>	<name>	<value(path)>
-Arabidopsis_thaliana	TAIR10	30	gtf	TAIR10_30_gtf	TAIR10_30_gtf	Arabidopsis thaliana: TAIR10 (30)	/home/charles/data/annotations/Arabidopsis_thaliana/TAIR10/Arabidopsis_thaliana.TAIR10.30.gtf
-Arabidopsis_thaliana	TAIR10	30	gff3	TAIR10_30_gff3	TAIR10_30_gff3	Arabidopsis thaliana: TAIR10 (30)	/home/charles/data/annotations/Arabidopsis_thaliana/TAIR10/Arabidopsis_thaliana.TAIR10.30.gff3
-Homo_sapiens	v38	82	gtf	v38_82_gtf	v38_82_gtf	Homo sapiens: v38	/home/charles/data/annotations/Homo_sapiens/v38/Homo_sapiens.GRCh38.82.gtf

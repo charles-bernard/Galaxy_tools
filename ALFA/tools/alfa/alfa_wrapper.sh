@@ -12,12 +12,14 @@ printf "__________________________________________________________________\n" >>
 cat $configFile >> $logReport
 
 #########################################################################################################
-# INITIALIZE THE VARIABLES from $configFile                                                             #
+# INITIALIZATION OF THE VARIABLES from $configFile                                                      #
 #########################################################################################################
 #_INPUT1
 annotationSource=`grep -P '^annotationSource ?=' $configFile | awk 'BEGIN{FS="= ?"} {print $2}'`;
-if [ "$annotationSource" != "index" ]; then
+if [ "$annotationSource" == "personal_gtf" ]; then
 	annotationFile=`grep -P '^annotationFile ?=' $configFile | awk 'BEGIN{FS="= ?"} {print $2}'`;
+elif [ "$annotationSource" == "built_in_index" ]; then
+	built_in_index_prefix=`grep -P '^built_in_index_prefix ?=' $configFile | awk 'BEGIN{FS="= ?"} {print $2}'`;
 else
 	strandedIndex=`grep -P '^strandedIndex ?=' $configFile | awk 'BEGIN{FS="= ?"} {print $2}'`;
 	unstrandedIndex=`grep -P '^unstrandedIndex ?=' $configFile | awk 'BEGIN{FS="= ?"} {print $2}'`;
@@ -64,9 +66,9 @@ if [ "$indexChoice" == "True" ]; then
 fi
 
 #########################################################################################################
-# CREATE A TMP DIRECTORY FOR THE OUTPUT FILES OF ALFA AND cd                                            #
+# CREATION OF A TMP DIRECTORY FOR THE OUTPUT FILES OF ALFA AND cd                                       #
 #########################################################################################################
-outputDirectory=`mktemp -d /home/charles/galaxy/database/tmp/tmpXXXXXX`;
+outputDirectory=`mktemp -d /export/home1/users/biocomp/chbernar/galaxy/database/tmp/tmpXXXXXX`;
 if [ -d $outputDirectory ]; then
 	chmod -R ugo+wrx $outputDirectory;
 	rm -R $outputDirectory;
@@ -76,7 +78,7 @@ chmod -R ugo+wrx $outputDirectory;
 cd $outputDirectory;
 
 #########################################################################################################
-# TEST INPUT1                                                                                           #
+# TEST OF INPUT1                                                                                        #
 #########################################################################################################
 if [ "$annotationSource" == "index" ]; then
 	#need to copy the files.dat to .*index because ALFA requires the extension ".(un)stranded.index"
@@ -86,7 +88,7 @@ if [ "$annotationSource" == "index" ]; then
 fi
 
 #########################################################################################################
-# TEST INPUT2 AND DETERMINE PYTHON READS INPUT ARGUMENT                                                 #
+# TEST OF INPUT2 AND DETERMINATION OF PYTHON READS INPUT ARGUMENT                                       #
 #########################################################################################################
 readsListLen=`echo "$readsFileList" | wc -l`;
 readsInput="";
@@ -111,11 +113,13 @@ for (( i = 1; i <= readsListLen; i++ )) do
 done
 
 #########################################################################################################
-# DETERMINE THE APPROPRIATE SCRIPTS ARGUMENTS                                                           #
+# DETERMINATION OF THE APPROPRIATE SCRIPTS ARGUMENTS                                                    #
 #########################################################################################################
-scriptPath="/home/charles/galaxy/tools/alfa/";
+scriptPath="/export/home1/users/biocomp/chbernar/galaxy/tools/alfa/";
 if [ "$annotationSource" == "index" ]; then
 	scriptInput="-g $index -i ""$readsInput";
+elif [ "$annotationSource" == "built_in_index" ]; then
+	scriptInput="-g $built_in_index_prefix -i ""$readsInput";
 else
 	scriptInput="-a $annotationFile -i ""$readsInput";
 fi
@@ -138,7 +142,7 @@ else
 fi
 
 #########################################################################################################
-# DISPLAY AND RUN THE ALFA PROCESS                                                                      #
+# DISPLAY ALFA PROCESS                                                                                  #
 #########################################################################################################
 printf "__________________________________________________________________\n\n" >> $logReport
 printf "                          ALFA PROCESS                            \n" >> $logReport
@@ -156,27 +160,39 @@ fi
 printf "Command:\n" >> $logReport
 echo "python ""$scriptPath"ALFA.py $scriptInput $scriptStrandness $scriptCategoriesDepth $scriptPlotOutput >> $logReport;
 printf "\n******************************************************************\n" >> $logReport
-
 printf "Temporary Output Directory:\n" >> $logReport
 echo $outputDirectory >> $logReport
 printf "\n******************************************************************\n" >> $logReport
-
 printf "ALFA prompt:\n" >> $logReport
 python "$scriptPath"ALFA.py $scriptInput $scriptStrandness $scriptCategoriesDepth $scriptPlotOutput >> $logReport 2>errorFile;
 printf "\n******************************************************************\n" >> $logReport
 
-printf "ALFA errors:\n" >> $logReport
-cat errorFile >> $logReport
-printf "\n******************************************************************\n" >> $logReport
-
+#########################################################################################################
+# REDIRECTION OF ERRORS - TMP SOURCE ALFA.PY MUST BE CORRECTED SOON                                     #
+#########################################################################################################
 if [[ -s errorFile ]]; then
+	#When the option --n is enabled, alfa prints '### End of the program' in stderr even if the process worked-
+	#The following lines to avoid the tool from crashing in this case
 	endProgram=`grep -c '### End of program' errorFile`
 	if [ "$endProgram" == "0" ]; then
-		>&2 printf "ALFA crashed due to the following error:\n"
-		>&2 printf "\n"
-		>&2 cat errorFile
-		exit 0
-	fi
+		#When alfa prints '### End of program' in stdout, all the messages in stderr are considered
+		#as warnings and not as errors. True errors make the script exits with code "2"
+		endProgram=`grep -c '### End of program' $logReport`
+		if [ "$endProgram" == "0" ]; then
+ 			>&2 printf "The script ALFA.py encountered the following error:\n\n"
+			>&2 cat errorFile
+			printf "ALFA error:\n" >> $logReport
+			cat errorFile >> $logReport
+			printf "\n******************************************************************\n" >> $logReport
+ 			exit 2
+ 		else
+ 			>&2 printf "The script ALFA.py encountered the following warning:\n\n"
+ 			>&2 cat errorFile 
+ 			printf "ALFA warning:\n" >> $logReport
+ 			cat errorFile >> $logReport
+			printf "\n******************************************************************\n" >> $logReport
+ 		fi
+ 	fi
 fi
 
 #########################################################################################################
@@ -206,6 +222,9 @@ if [ "$indexChoice" == "True" ]; then
 	if [ "$annotationSource" == "index" ]; then
 		mv $strandedIndex $outputStrandedIndex
 		mv $unstrandedIndex $outputUnstrandedIndex
+	elif [ "$annotationSource" == "built_in_index" ]; then
+		cp $built_in_index_prefix".stranded.index" $outputStrandedIndex
+		cp $built_in_index_prefix".unstranded.index" $outputUnstrandedIndex
 	else
 		annotationFileName=`grep -P -o '[^/]*\.dat$' <<< $annotationFile`
 		mv $annotationFileName".stranded.index" $outputStrandedIndex
