@@ -268,7 +268,9 @@
 
 	.. class:: infomark
 
-	| ALFA also allows to use built-in indexes to save even more computational time. In order to generate these built-in indexes, install the data manager tool 'data_manager_build_alfa_indexes' available on the toolshed.
+	| ALFA also allows to use built-in indexes to save even more computational time. In order to generate easily these built-in indexes, install the data manager tool `data_manager_build_alfa_indexes`_ available on the toolshed.
+
+	.. _data_manager_build_alfa_indexes: https://toolshed.g2.bx.psu.edu/view/charles-bernard/data_manager_build_alfa_indexes
 
 * **Input 2: Reads**
 
