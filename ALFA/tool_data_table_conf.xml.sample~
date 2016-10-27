@@ -2,6 +2,6 @@
     <!-- Locations of all alfa indexes -->
     <table name="alfa_indexes" comment_char="#" allow_duplicate_entries="False">
         <columns>species, version, release, value, dbkey, name, prefix</columns>
-        <file path="tool-data/alfa_indexes.loc" />
+        <file path="tool-data/alfa_genomes_indexes.loc" />
     </table>
 </tables>

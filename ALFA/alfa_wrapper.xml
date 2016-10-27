@@ -8,10 +8,61 @@
     	<requirement type="package" version="1.4">matplotlib</requirement>
   	</requirements>
 
-  	<command interpreter="bash">
-  		alfa_wrapper.sh $__root_dir__ $__tool_directory__ $ALFA_config $logReport
-  	</command>	
-	
+	<command interpreter="python">
+	<![CDATA[
+		ALFA_wrapper.py
+
+		--project_name "${projectName}"	
+
+		##__INPUT 1__##
+		#if str ( $annotation.annotationSource['annotationSourceSelection'] ) == "index"
+			--index $annotation.annotationSource['strandedIndex'] $annotation.annotationSource['unstrandedIndex']
+		#else if str ( $annotation.annotationSource['annotationSourceSelection'] ) == "built_in_index"
+			--bi_index $annotation.annotationSource.built_in_index_prefix.fields.prefix
+		#else
+			--annotation $annotation.annotationSource['annotationFile']
+		#end if
+
+		##__INPUT 2__##
+		--reads_format $reads.readsType['readsTypeSelection']
+			--reads
+		#for $i, $r in enumerate ( $reads.readsType['readsList'] ) 
+			__fname__$r.readsFile
+			__label__$r.readsLabel
+		#end for
+		--strandness $reads['strandness']
+
+		##__OUTPUT FILES__##
+		#if str ( $outputFiles['plot'] ) == "True"
+			#if str ( $outputOptions['plotFormat'] ) == "pdf"
+				--output_pdf $outputPdf
+			#else if str ( $outputOptions['plotFormat'] ) == "png"
+				--output_png $outputCategoriesPng $outputBiotypesPng
+			#else
+				--output_svg $outputCategoriesSvg $outputBiotypesSvg
+			#end if
+		#end if
+		#if str ( $outputFiles['countFile'] ) == "True"
+			--output_count $outputCountFile
+		#end if
+		#if str ( $outputFiles['index'] ) == "True"
+			--output_index $outputStrandedIndex $outputUnstrandedIndex
+		#end if
+
+		##__OUTPUT OPTIONS__##
+		--categories_depth $outputOptions['categoriesDepth']
+		#if str ( $outputFiles['plot'] ) == "True"
+			--plot_format $outputOptions['plotFormat']
+			#if str ( $outputOptions.plotThreshold['plotThresholdChoice'] ) == "True"
+				--threshold $outputOptions.plotThreshold.yMin $outputOptions.plotThreshold.yMax
+			#end if
+		#end if
+
+		--log_report $logReport
+		--galaxy_root $__root_dir__
+		--tool_dir $__tool_directory__
+	]]>
+	</command>
 	<inputs>
 		<param name="projectName" value="ALFA" type="text" size="20" label="Project Name">
 			<validator type="empty_field" message="Please, specify a name for your project."/>
@@ -29,7 +80,7 @@
 					</param>
 				</when>
 				<when value="index">
-					<param name="strandedIndex" type="data" format="index" label="Select your ALFA stranded index file (index format)"/>
+					<param name="strandedIndex" type="data" format="index" label="Select your ALFA Stranded index file (index format)"/>
 					<param name="unstrandedIndex" type="data" format="index" label="Select your ALFA Unstranded index file (index format)"/>
 				</when>
 				<when value="built_in_index">
@@ -74,7 +125,7 @@
 			<param name="index" type="boolean" truevalue="True" falsevalue="False" checked="False" label ="Indexes" help="Print the resulting stranded and unstranded indexes from the gtf input file (useful if you plan to run ALFA again with this annotated sequence)"/>
 		</section>
 
-		<section name="outputOptions" title="ADVANCED OPTIONS" expanded="False">
+		<section name="outputOptions" title="ADVANCED SETTINGS" expanded="False">
 			<param name="categoriesDepth" type="select" label="Categories to Display">
 				<option value="1">gene | intergenic</option>
 				<option value="2">exon | intron | intergenic</option>
@@ -92,6 +143,7 @@
 						<param name="yMin" type="float" value="-2.0" label="y min"/>
 						<param name="yMax" type="float" value="2.0" label="y max"/>
 					</when>
+					<when value="False"></when>
 			</conditional>
 		</section>
 	</inputs>
@@ -123,61 +175,6 @@
 			<filter>outputFiles['index'] is True</filter>
 		</data>
 	</outputs>
-
-	<configfiles>
-		<configfile name="ALFA_config">
-			projectName=$projectName
-
-			##__INPUT 1__##
-			annotationSource=$annotation.annotationSource['annotationSourceSelection']
-			#if str ( $annotation.annotationSource['annotationSourceSelection'] ) == "index"
-				annotationFile=None
-				strandedIndex=$annotation.annotationSource['strandedIndex']
-				unstrandedIndex=$annotation.annotationSource['unstrandedIndex']
-			#else if str ( $annotation.annotationSource['annotationSourceSelection'] ) == "built_in_index"
-				annotationFile=None
-				built_in_index_prefix=$annotation.annotationSource.built_in_index_prefix.fields.prefix
-			#else
-				annotationFile=$annotation.annotationSource['annotationFile']
-				strandedIndex=None
-				unstrandedIndex=None
-			#end if
-
-			##__INPUT 2__##
-			readsType=$reads.readsType['readsTypeSelection']
-			#for $i, $r in enumerate ( $reads.readsType['readsList'] ) 
-				readsFile[$i]=$r.readsFile
-				readsLabel[$i]=$r.readsLabel
-			#end for
-			strandness=$reads['strandness']
-
-			##__OUTPUT FILES__##
-			plotChoice=$outputFiles['plot']
-			countFileChoice=$outputFiles['countFile']
-			indexChoice=$outputFiles['index']
-
-			outputPdf=$outputPdf
-			outputCategoriesPng=$outputCategoriesPng
-			outputBiotypesPng=$outputBiotypesPng
-			outputCategoriesSvg=$outputCategoriesSvg
-			outputBiotypesSvg=$outputBiotypesSvg
-			outputCountFile=$outputCountFile
-			outputStrandedIndex=$outputStrandedIndex
-			outputUnstrandedIndex=$outputUnstrandedIndex
-
-			##__OUTPUT OPTIONS__##
-			categoriesDepth=$outputOptions['categoriesDepth']
-			plotFormat=$outputOptions['plotFormat']
-			plotThresholdChoice=$outputOptions.plotThreshold['plotThresholdChoice']
-			#if str ( $outputOptions.plotThreshold['plotThresholdChoice'] ) == "True"
-				yMin=$outputOptions.plotThreshold.yMin
-				yMax=$outputOptions.plotThreshold.yMax
-			#else
-				yMin=None
-				yMax=None
-			#end if
-		</configfile>
-	</configfiles>
 
 	<tests>
 		<test>
@@ -221,17 +218,19 @@
 	</tests>
 
 	<help>
-**ALFA acronym**
-
-- Annotation.Landscape.For.Aligned reads
-
-----
-
+<![CDATA[
 **What it does**
+
 
 	| ALFA provides a global overview of features distribution composing New Generation Sequencing dataset(s). 
 	|
  	| Given a set of aligned reads (BAM files) and an annotation file (GTF format), the tool produces plots of the raw and normalized distributions of those reads among genomic categories (stop codon, 5'-UTR, CDS, intergenic, etc.) and biotypes (protein coding genes, miRNA, tRNA, etc.). Whatever the sequencing technique, whatever the organism.
+
+----
+
+**ALFA acronym**
+
+- Annotation.Landscape.For.Aligned reads
 
 ----
 
@@ -250,56 +249,63 @@
 
 **Nota Bene**
 
-1. **Input 1: Annotation File**
+* **Input 1: Annotation File**
 
 
-	| ALFA requires as first input an annotation file (sequence, genome...) in gtf format in order to generate indexes that will be used in a 2nd step of the program.
-	| Indexes are files which list all the coordinates of all categories (stop codon, 5'-UTR, CDS, intergenic...) and biotypes (protein coding genes, miRNA, tRNA, ...) encountered in the annotated sequence.
+	| ALFA requires as first input an annotation file (sequence, genome...) in gtf format in order to generate alfa indexes needed in a second round of the program.
+	| Indexes are files which list all the coordinates of the categories (stop codon, 5'-UTR, CDS, intergenic...) and biotypes (protein coding genes, miRNA, tRNA, ...) encountered in the annotated sequence.
+	|
 	
-.. class:: warningmark
+	.. class:: warningmark
 
-Gtf File must be sorted.
+	| Gtf File must be sorted.
+	|
 
-.. class:: infomark
+	.. class:: infomark
 
-Generation of indexes from an annotation file may be time consuming (i.e ~10min for the human genome). Thus, ALFA allows the user to submit directly indexes generated in previous runs.
+	| Generation of indexes from an annotation file might be time consuming (i.e ~10min for the human genome). Thus, ALFA allows the user to submit directly indexes generated in previous runs.
+	|
 
-2. **Input 2: Reads**
+	.. class:: infomark
 
-	| ALFA requires as second input a single or a set of mapped reads file(s) in either bam or bedgraph format. These files are required to intersect the coordinates of the mapped reads with the associated categories and biotypes on the annotated sequence.
+	| ALFA also allows to use built-in indexes to save even more computational time. In order to generate these built-in indexes, install the data manager tool 'data_manager_build_alfa_indexes' available on the toolshed.
+
+* **Input 2: Reads**
+
+	| ALFA requires as second input a single or a set of mapped reads file(s) in either bam or bedgraph format. The coordinates of the mapped reads will be intersected with the according categories and biotypes mentioned in the indexes.
 	| The strandness option determines which strand of the annotated sequence will be taken into account during this intersection.
+	|
 
-.. class:: warningmark
+	.. class:: warningmark
 
-Bam or Bedgraph file(s) must be sorted.
+	| Bam or Bedgraph file(s) must be sorted.
+	|
 
-<!--
-.. class:: warningmark
+	.. class:: warningmark
 
-For oriented reads (either matching the forward strand or the reverse strand), 'forward' or 'reverse' strandness must be selected.
+	| Chromosome names in reads and in annotation file (gtf or indexes) must be the same for the intersection to occur
+	|
 
-.. class:: warningmark
-
-For paired-end or non-oriented reads, 'unstranded' strandness must be selected.
--->
-
-3. **Output files**
+* **Output files**
 
 	| The result of the intersection is a count file displaying the count of nucleotides in the reads for each genomic categories and biotypes. From this count file, plots of the raw and normalized distributions of the reads among these categories are generated.
 	| In the output files section, the user can choose what kind of files he desires as ALFA output. Categories Count File and Plots are proposed by default. 
+	|
 
-.. class:: infomark
+	.. class:: infomark
 
-The user can also select the 'indexes' option as output. This option is interesting if you plan to run ALFA again with the same submitted annotation file. *See Nota Bene/Input 1: Annotation File for more information.*
+	| The user can also select the 'indexes' option as output. This option is interesting if you plan to run ALFA again with the same submitted annotation file. *See Nota Bene/Input 1: Annotation File for more information.*
+	|
 
+	- `How the plots look like`_
 
-- `How the plots look like`_
+	.. _How the plots look like: https://github.com/biocompibens/ALFA#plots
 
-.. _How the plots look like: https://github.com/biocompibens/ALFA#plots
+	|
 
-- `How they are generated`_ 
+	- `How they are generated`_ 
 
-.. _How they are generated: https://github.com/biocompibens/ALFA#detailed-example
+	.. _How they are generated: https://github.com/biocompibens/ALFA#detailed-example
 
 ----
 
@@ -307,7 +313,7 @@ The user can also select the 'indexes' option as output. This option is interest
 
 	| Benoît Noël and Mathieu Bahin: *compbio team, Institut de Biologie de l'Ecole Normale Supérieure de Paris*
 
-
+]]>
      </help>
 
      <citations>
