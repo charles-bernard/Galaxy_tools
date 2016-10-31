@@ -40,18 +40,9 @@ def get_arg():
     parser.add_argument('--threshold', dest='threshold', action='store', nargs=2, metavar=('yMin', 'yMax'), type=float)
     #Internal variables
     parser.add_argument('--log_report', dest='log_report', action='store', nargs=1, metavar='log_filename', type=str)
-    parser.add_argument('--galaxy_root', dest='GALAXY_ROOT_DIR', action='store', nargs=1, metavar='galaxy_root_path', type=str)
     parser.add_argument('--tool_dir', dest='GALAXY_TOOL_DIR', action='store', nargs=1, metavar='galaxy_tool_dir_path', type=str)
     args = parser.parse_args()
     return args
-
-def make_tmp_dir(galaxy_root):
-    parent_dir = os.path.join(galaxy_root, 'database/tmp/')
-    if os.path.exists(parent_dir):
-        tmp_dir = tempfile.mkdtemp(prefix='tmp', suffix='', dir=parent_dir)
-    else:
-        tmp_dir = tempfile.mkdtemp(prefix='tmp', suffix='', dir='.')
-    return tmp_dir
 
 def mv_and_rename_user_indexes(stranded_index, unstranded_index):
     index='index'
@@ -109,8 +100,7 @@ def main():
     if not (args.output_pdf or args.output_png or args.output_svg or args.output_indexes or args.output_count):
         exit_and_explain('Error: no output to return\nProcess Aborted\n')
 
-    tmp_dir = make_tmp_dir(args.GALAXY_TOOL_DIR[0])
-    os.chdir(tmp_dir)
+    tmp_dir = tempfile.mkdtemp(prefix='tmp', suffix='')
 
     logging.basicConfig(level=logging.INFO, filename=args.log_report[0], filemode="a+", format='%(message)s')
 
