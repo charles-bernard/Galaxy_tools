@@ -59,7 +59,6 @@
 		#end if
 
 		--log_report $logReport
-		--galaxy_root $__root_dir__
 		--tool_dir $__tool_directory__
 	]]>
 	</command>
