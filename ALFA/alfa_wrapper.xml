@@ -262,7 +262,7 @@
 
 	.. class:: infomark
 
-	| Generation of indexes from an annotation file might be time consuming (i.e ~10min for the human genome). Thus, ALFA allows the user to submit directly indexes generated in previous runs.
+	| Generation of indexes from an annotation file might be time consuming (i.e ~10min for the human genome). Thus, ALFA allows the user to submit directly indexes generated in previous runs as inputs for a new run.
 	|
 
 	.. class:: infomark
@@ -290,7 +290,7 @@
 * **Output files**
 
 	| The result of the intersection is a count file displaying the count of nucleotides in the reads for each genomic categories and biotypes. From this count file, plots of the raw and normalized distributions of the reads among these categories are generated.
-	| In the output files section, the user can choose what kind of files he desires as ALFA output. Categories Count File and Plots are proposed by default. 
+	| In the output files section, the user can choose what kind of files he/she desires as ALFA output. Categories Count File and Plots are proposed by default. 
 	|
 
 	.. class:: infomark
