@@ -44,10 +44,12 @@ def get_arg():
     args = parser.parse_args()
     return args
 
-def mv_and_rename_user_indexes(stranded_index, unstranded_index):
+def symlink_user_indexes(stranded_index, unstranded_index):
     index='index'
-    shutil.copy(stranded_index, index + '.stranded.index')
-    shutil.copy(unstranded_index, index + '.unstranded.index')
+    os.symlink(stranded_index, index + '.stranded.index')
+    os.symlink(unstranded_index, index + '.unstranded.index')
+    #shutil.copy(stranded_index, index + '.stranded.index')
+    #shutil.copy(unstranded_index, index + '.unstranded.index')
     return index
 
 def get_input2_args(reads_list, format):
@@ -99,17 +101,14 @@ def main():
 
     if not (args.output_pdf or args.output_png or args.output_svg or args.output_indexes or args.output_count):
         exit_and_explain('Error: no output to return\nProcess Aborted\n')
-
     tmp_dir = tempfile.mkdtemp(prefix='tmp', suffix='')
-
     logging.basicConfig(level=logging.INFO, filename=args.log_report[0], filemode="a+", format='%(message)s')
-
     alfa_path = os.path.join(args.GALAXY_TOOL_DIR[0], 'ALFA.py')
 
     #INPUT1: Annotation File
     if args.indexes:
         # The indexes submitted by the user must exhibit the suffix '.(un)stranded.index' and will be called by alfa by their prefix
-        index = mv_and_rename_user_indexes(args.indexes[0], args.indexes[1])
+        index = symlink_user_indexes(args.indexes[0], args.indexes[1])
         input1_args = '-g %s' % index
     elif args.bi_indexes:
         input1_args = '-g %s' % args.bi_indexes[0]
