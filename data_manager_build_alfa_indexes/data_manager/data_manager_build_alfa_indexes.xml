@@ -7,7 +7,7 @@
       <requirement type="package" version="1.4">matplotlib</requirement>
   </requirements>
   
-  <command interpreter="python">data_manager_build_alfa_indexes.py -e "${reference_source['kingdom']}" "${reference_source['species_name']}" -o "${out_file}" $__tool_directory__</command>
+  <command interpreter="python">data_manager_build_alfa_indexes.py -e "${reference_source['kingdom']}" "${reference_source['species_name']}" -o "${out_file}" "$__tool_directory__"</command>
 
   <inputs>
     <conditional name="reference_source">
