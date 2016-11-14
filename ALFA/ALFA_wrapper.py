@@ -48,8 +48,6 @@ def symlink_user_indexes(stranded_index, unstranded_index):
     index='index'
     os.symlink(stranded_index, index + '.stranded.index')
     os.symlink(unstranded_index, index + '.unstranded.index')
-    #shutil.copy(stranded_index, index + '.stranded.index')
-    #shutil.copy(unstranded_index, index + '.unstranded.index')
     return index
 
 def get_input2_args(reads_list, format):
