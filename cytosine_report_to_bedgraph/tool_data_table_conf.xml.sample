@@ -1,0 +1,7 @@
+<tables>
+    <!-- Location of all igv genomes chr sizes -->
+     <table name="igv_genomes_chr_sizes" comment_char="#" allow_duplicate_entries="False">
+        <columns>value, dbkey, name, path</columns>
+        <file path="tool-data/igv_genomes_chr_sizes.loc" />
+    </table>
+</tables>

@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<tool_dependency>
+    <package name="igvtools" version="2.3.32">
+        <repository name="package_igvtools_2_3_32" owner="geert-vandeweyer" />
+    </package>
+</tool_dependency>
