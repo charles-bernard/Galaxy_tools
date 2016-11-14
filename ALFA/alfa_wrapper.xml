@@ -16,37 +16,37 @@
 
 		##__INPUT 1__##
 		#if str ( $annotation.annotationSource['annotationSourceSelection'] ) == "index"
-			--index $annotation.annotationSource['strandedIndex'] $annotation.annotationSource['unstrandedIndex']
+			--index "$annotation.annotationSource['strandedIndex'] $annotation.annotationSource['unstrandedIndex']"
 		#else if str ( $annotation.annotationSource['annotationSourceSelection'] ) == "built_in_index"
-			--bi_index $annotation.annotationSource.built_in_index_prefix.fields.prefix
+			--bi_index "$annotation.annotationSource.built_in_index_prefix.fields.prefix"
 		#else
-			--annotation $annotation.annotationSource['annotationFile']
+			--annotation "$annotation.annotationSource['annotationFile']"
 		#end if
 
 		##__INPUT 2__##
 		--reads_format $reads.readsType['readsTypeSelection']
 			--reads
 		#for $i, $r in enumerate ( $reads.readsType['readsList'] ) 
-			__fname__$r.readsFile
-			__label__$r.readsLabel
+			"__fname__$r.readsFile"
+			"__label__$r.readsLabel"
 		#end for
 		--strandness $reads['strandness']
 
 		##__OUTPUT FILES__##
 		#if str ( $outputFiles['plot'] ) == "True"
 			#if str ( $outputOptions['plotFormat'] ) == "pdf"
-				--output_pdf $outputPdf
+				--output_pdf "$outputPdf"
 			#else if str ( $outputOptions['plotFormat'] ) == "png"
-				--output_png $outputCategoriesPng $outputBiotypesPng
+				--output_png "$outputCategoriesPng" "$outputBiotypesPng"
 			#else
-				--output_svg $outputCategoriesSvg $outputBiotypesSvg
+				--output_svg "$outputCategoriesSvg" "$outputBiotypesSvg"
 			#end if
 		#end if
 		#if str ( $outputFiles['countFile'] ) == "True"
-			--output_count $outputCountFile
+			--output_count "$outputCountFile"
 		#end if
 		#if str ( $outputFiles['index'] ) == "True"
-			--output_index $outputStrandedIndex $outputUnstrandedIndex
+			--output_index "$outputStrandedIndex" "$outputUnstrandedIndex"
 		#end if
 
 		##__OUTPUT OPTIONS__##
@@ -58,8 +58,8 @@
 			#end if
 		#end if
 
-		--log_report $logReport
-		--tool_dir $__tool_directory__
+		--log_report "$logReport"
+		--tool_dir "$__tool_directory__"
 	]]>
 	</command>
 	<inputs>
