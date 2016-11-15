@@ -8,7 +8,7 @@ BEGIN {
 }
 
 {
-	if ( $6 ~ context && ($4 > 0 || $5 > 0) ) { 
+	if ( $6 ~ context && ( $4 > 0 || $5 > 0 ) ) { 
 
 		chr_name = $1;
 		chr_pos = $2;
@@ -20,13 +20,13 @@ BEGIN {
 			nb_reads = c_meth_count + c_unmeth_count
 			printf("%s\t%s\t%s\t%s\n", chr_name, chr_pos, chr_pos, nb_reads)
 		} else {
-			if ( strand == "-") { 
+			if ( strand == "-" ) { 
 				s = "-"; 
 			} else { 
 				s = "";
 			}
-			meth_ratio = c_meth_count / (c_meth_count + c_unmeth_count); 
-			printf("%s\t%s\t%s\t%s%s\n", chr_name, chr_pos, chr_pos, s, meth_ratio)	
+			meth_ratio = c_meth_count / ( c_meth_count + c_unmeth_count ); 
+			printf( "%s\t%s\t%s\t%s%s\n", chr_name, chr_pos, chr_pos, s, meth_ratio )	
 		}
 	}
 }
