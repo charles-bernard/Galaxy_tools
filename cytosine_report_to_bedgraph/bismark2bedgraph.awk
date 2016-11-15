@@ -1,5 +1,8 @@
 #!/usr/bin/awk
 
+#USAGE:
+#awk -v context=<list_of_contexts> -v coverage=<boolean> -f <script_path>/bismark2bedgraph.awk <cytosine_report_name> >> <bedgraph_name>
+
 BEGIN {
 	FS = "\t";
 }
