@@ -37,15 +37,6 @@ while true ; do
 	esac
 done
 
-# do something with the variables -- in this case the lamest possible one :-)
-echo "epi = $epi"
-echo "infile_cov = $infile_cov"
-echo "output_dir = $output_dir"
-echo "context = $context"
-echo "tool_dir = $tool_dir"
-echo "tdf = $tdf"
-echo "igv_genome = $igv_genome"
-
 #IGV_path
 #IGV_path="/users/biocomp/chbernar/galaxy_testing/database/dependencies/igvtools/2.3.32/geert-vandeweyer/package_igvtools_2_3_32/3c087cee3b8f/bin"
 
