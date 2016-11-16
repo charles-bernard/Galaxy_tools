@@ -14,8 +14,7 @@
 						<!-- <source>{prefix}</source> - out_file.extra_files_path is used as base by default -->
 						<target base="${GALAXY_DATA_MANAGER_DATA_PATH}">alfa_indexes/${dbkey}</target>
 					</move>
-					<value_translation>${GALAXY_DATA_MANAGER_DATA_PATH}/alfa_indexes/${dbkey}</value_translation>
-					<!--<value_translation>${GALAXY_DATA_MANAGER_DATA_PATH}/alfa_indexes/${dbkey}/${species}.${version}.${release}</value_translation>-->
+					<value_translation>${GALAXY_DATA_MANAGER_DATA_PATH}/alfa_indexes/${dbkey}/${species}.${version}.${release}</value_translation>
 					<value_translation type="function">abspath</value_translation>
 				</column>
 			</output>
