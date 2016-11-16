@@ -9,6 +9,7 @@ long_description: |
 
     The tool outputs offer the possibility to vizualise the methylation signal of covered cytosines thanks to softwares like IGV (Integrative Genomics Viewer).
     In this respect, the tool can optionally generate a tdf binary file (Tiled Data Format) from each converted bedGraph. Tdf format is indeed better handled by IGV than bedGraph.
-name: bismark
+name: cytosine_report_to_bedgraph
+remote_repository_url: https://github.com/charles-bernard/Galaxy_tools/tree/master/cytosine_report_to_bedgraph
 owner: charles-bernard
 type: unrestricted
