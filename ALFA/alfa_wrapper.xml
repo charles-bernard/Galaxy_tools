@@ -16,7 +16,7 @@
 
 		##__INPUT 1__##
 		#if str ( $annotation.annotationSource['annotationSourceSelection'] ) == "index"
-			--index "$annotation.annotationSource['strandedIndex'] $annotation.annotationSource['unstrandedIndex']"
+			--index "$annotation.annotationSource['strandedIndex']" "$annotation.annotationSource['unstrandedIndex']"
 		#else if str ( $annotation.annotationSource['annotationSourceSelection'] ) == "built_in_index"
 			--bi_index "$annotation.annotationSource.built_in_index_prefix.fields.prefix"
 		#else
