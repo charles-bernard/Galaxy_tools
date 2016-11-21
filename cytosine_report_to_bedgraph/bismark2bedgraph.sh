@@ -8,34 +8,27 @@ eval set -- "$TEMP"
 while true ; do
 	case "$1" in
 		-e | --epi )
-			#epi is the prefix of the output files names
 			case "$2" in
 				"" ) epi="current_job"; shift 2 ;;
 				*) epi=$2; shift 2 ;;
 			esac ;;
 		-i | --infile_cov )
-			#infile_cov is the filename of the cytosine report taken as input
 			case "$2" in
 				*) infile_cov=$2; shift 2 ;;
 			esac ;;
 		-c | --context ) 
-			#context defines weither 2 or 4 bedgraphs are returned
 			context=true; shift ;;
 		--tdf )
-			#tdf defines weither or not bedgraphs have to be converted into tdf files.
 			tdf=true; shift ;;
 		--igv_genome )
-			#tdf conversion is achieved by igvtools and requires a file with the chrs_len of the genome
 			case "$2" in
 				*) igv_genome=$2; shift 2 ;;
 			esac ;;
 		-o | --output_dir )
-			#output_dir in this galaxy tool is the tmp dir created by the wrapper.py
 			case "$2" in
 				*) output_dir=$2; shift 2 ;;
 			esac ;;
 		--tool_dir )
-			#tool_dir is recquired to call other scripts stored in this directory
 			case "$2" in
 				*) tool_dir=$2; shift 2 ;;
 			esac ;;
@@ -44,43 +37,55 @@ while true ; do
 	esac
 done
 
-#IGV_path
-#IGV_path="/users/biocomp/chbernar/galaxy_testing/database/dependencies/igvtools/2.3.32/geert-vandeweyer/package_igvtools_2_3_32/3c087cee3b8f/bin"
 
-# define outputs according to options
+#IGV_path
+IGV_path="/users/biocomp/chbernar/galaxy_testing/database/dependencies/igvtools/2.3.32/geert-vandeweyer/package_igvtools_2_3_32/3c087cee3b8f/bin"
+
+# define outputs according to the options
 if [[ "$context" = true ]]; then
-	context_list=("CG" "CHG" "CHH")
 	n="4"
-	output_types=("CG" "CHG" "CHH" "coverage")
-	bedgraph_list=("$output_dir""/""$epi""_CpG.bedgraph" "$output_dir""/""$epi""_CHG.bedgraph" "$output_dir""/""$epi""_CHH.bedgraph" "$output_dir""/""$epi""_coverage.bedgraph")
-	if [[ "$tdf" = true ]]; then
-		tdf_list=("$output_dir""/""$epi""_CpG.tdf" "$output_dir""/""$epi""_CHG.tdf" "$output_dir""/""$epi""_CHH.tdf" "$output_dir""/""$epi""_coverage.tdf")
-	fi
+	output_types=("CG" "CHG" "CHH" "coverage");
+	context_list=("CG" "CHG" "CHH" ".*");
+	iscoverage=("false" "false" "false" "true");
 else
-	context_list=(".*")
 	n="2"
-	output_types=("CXX" "coverage")
-	bedgraph_list=("$output_dir""/""$epi""_CXX.bedgraph" "$output_dir""/""$epi""_coverage.bedgraph")
-	if [[ "$tdf" = true ]]; then
-		tdf_list=("$output_dir""/""$epi""_CXX.tdf" "$output_dir""/""$epi""_coverage.tdf")
-	fi
+	output_types=("CXX" "coverage");
+	context_list=(".*" ".*");
+	iscoverage=("false" "true");
 fi
 
-# process
 for (( i=0; i<$n; i++)); do
-	printf "________________________________________________________________________\n"
-	printf "Processing %s\n" ${output_types[$i]}
-	printf "... Converting Cytosine Report to Bedgraph\n" 
-	if (( i < n - 1 )); then #if not coverage:
-		printf "#<Chr>\t<Start>\t<End>\t<Strand;Meth_ratio>\n" > "${bedgraph_list[$i]}"
-		awk -v context="${context_list[$i]}" -v coverage="false" -f "$tool_dir"/bismark2bedgraph.awk $infile_cov >> "${bedgraph_list[$i]}"
-	else
-		printf "#<Chr>\t<Start>\t<End>\t<Coverage>\n" > "${bedgraph_list[$i]}"
-		awk -v context="${context_list[$i]}" -v coverage="true" -f "$tool_dir"/bismark2bedgraph.awk $infile_cov >> "${bedgraph_list[$i]}"
-	fi
-	if [[ "$tdf" = true ]]; then
-		printf "... Converting Bedgraph to Tdf\n"
-		#"$IGV_path""/"igvtools toTDF "${bedgraph_list[$i]}" "${tdf_list[$i]}" "$igv_genome" > stdout_file  
-		igvtools toTDF "${bedgraph_list[$i]}" "${tdf_list[$i]}" "$igv_genome" > stdout_file 
+	prefix="$output_dir""/""$epi""_""${output_types[$i]}";
+	bedgraph_list[$i]="$prefix"".bedgraph";
+	if [[ "$tdf" = true ]]; then 
+		tdf_list[$i]="$prefix"".tdf"; 
 	fi
 done
+
+# process function for the conversion from report to bedgraph
+awk_process() {
+	tool_dir=$1;
+	report_infile=$2;
+	bedgraph_outfile=$3;
+	output_type=$4;
+	context=$5;
+	coverage=$6;
+	printf "... Converting Cytosine Report to Bedgraph: %s\n" $output_type
+	awk -v context=$context -v coverage=$coverage -f "$tool_dir""/"bismark2bedgraph.awk $report_infile > $bedgraph_outfile;
+}
+export -f awk_process;
+# process function for the conversion from bedgraph to tdf
+igv_process() {
+	genome_chr_len=$1;
+	bedgraph_infile=$2;
+	tdf_outfile=$3;
+	output_type=$4;
+	printf "... Converting Bedgraph to TDF: %s\n" $output_type
+	"/users/biocomp/chbernar/galaxy_testing/database/dependencies/igvtools/2.3.32/geert-vandeweyer/package_igvtools_2_3_32/3c087cee3b8f/bin/"igvtools toTDF $bedgraph_infile $tdf_outfile $genome_chr_len > tmp_stdout;
+	#igvtools toTDF $bedgraph_infile $tdf_outfile $genome_chr_len > tmp_stdout;
+}
+export -f igv_process;
+
+# parallelize the processes
+parallel -k awk_process {1} {2} {3} {4} {5} {6} ::: "$tool_dir" :::+ "$infile_cov" ::: "${bedgraph_list[@]}" :::+ "${output_types[@]}" :::+ "${context_list[@]}" :::+ "${iscoverage[@]}";
+parallel -k igv_process {1} {2} {3} {4} ::: "$igv_genome" ::: "${bedgraph_list[@]}" :::+ "${tdf_list[@]}" :::+ "${output_types[@]}";
