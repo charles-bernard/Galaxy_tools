@@ -56,7 +56,7 @@ def __main__():
 
     logging.info('_______________________________________________________________\n')
     logging.info('COMMAND:\n')
-    logging.info("bash %s -i %s %s %s %s %s -e current_job -o %s\n" % (script_path, options.cytosine_report, context_option, tdf_option, genome_option, genome, tmp_dir))
+    logging.info("bash %s -tool_dir %s -i %s %s %s %s %s -e current_job -o %s\n" % (script_path, options.tool_dir, options.cytosine_report, context_option, tdf_option, genome_option, genome, tmp_dir))
 
     proc = subprocess.Popen(['bash', script_path, '--tool_dir', options.tool_dir, '-i', options.cytosine_report,\
                              context_option, tdf_option, genome_option, genome, '-e', 'current_job', '-o', tmp_dir], \
@@ -75,11 +75,11 @@ def __main__():
     	sys.exit(msg)
 
     if options.context:
-        shutil.move( glob(os.path.join(tmp_dir, '*_CpG.bedgraph'))[0], options.CpG_bedgraph )
+        shutil.move( glob(os.path.join(tmp_dir, '*_CG.bedgraph'))[0], options.CpG_bedgraph )
         shutil.move( glob(os.path.join(tmp_dir, '*_CHG.bedgraph'))[0], options.CHG_bedgraph )
         shutil.move( glob(os.path.join(tmp_dir, '*_CHH.bedgraph'))[0], options.CHH_bedgraph )
         if options.tdf:
-            shutil.move(glob(os.path.join(tmp_dir, '*_CpG.tdf'))[0], options.CpG_tdf)
+            shutil.move(glob(os.path.join(tmp_dir, '*_CG.tdf'))[0], options.CpG_tdf)
             shutil.move(glob(os.path.join(tmp_dir, '*_CHG.tdf'))[0], options.CHG_tdf)
             shutil.move(glob(os.path.join(tmp_dir, '*_CHH.tdf'))[0], options.CHH_tdf)
     else:
