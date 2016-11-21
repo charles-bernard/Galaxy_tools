@@ -37,10 +37,6 @@ while true ; do
 	esac
 done
 
-
-#IGV_path
-IGV_path="/users/biocomp/chbernar/galaxy_testing/database/dependencies/igvtools/2.3.32/geert-vandeweyer/package_igvtools_2_3_32/3c087cee3b8f/bin"
-
 # define outputs according to the options
 if [[ "$context" = true ]]; then
 	n="4"
@@ -81,8 +77,7 @@ igv_process() {
 	tdf_outfile=$3;
 	output_type=$4;
 	printf "... Converting Bedgraph to TDF: %s\n" $output_type
-	"/users/biocomp/chbernar/galaxy_testing/database/dependencies/igvtools/2.3.32/geert-vandeweyer/package_igvtools_2_3_32/3c087cee3b8f/bin/"igvtools toTDF $bedgraph_infile $tdf_outfile $genome_chr_len > tmp_stdout;
-	#igvtools toTDF $bedgraph_infile $tdf_outfile $genome_chr_len > tmp_stdout;
+	igvtools toTDF $bedgraph_infile $tdf_outfile $genome_chr_len > tmp_stdout;
 }
 export -f igv_process;
 
