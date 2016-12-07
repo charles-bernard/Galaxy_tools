@@ -28,7 +28,6 @@ def get_page_content(url):
     page = urllib2.urlopen(req)
     return page.read()
 
-
 def download_file(link, local_file_name):
     req = urllib2.Request(link)
     src_file = urllib2.urlopen(req)
@@ -45,12 +44,8 @@ def uncompress_gz(gz_file_name, uncompressed_file_name):
     uncompressed_file.close()
     print("-> Uncompressed !\n")
 
-def add_data_table_entry( data_manager_dict, data_table_entry ):
-    data_manager_dict['data_tables'] = data_manager_dict.get( 'data_tables', {} )
-    data_manager_dict['data_tables']['alfa_indexes'] = data_manager_dict['data_tables'].get( 'alfa_indexes', data_table_entry )
-    return data_manager_dict
-
 def standardize_species_name(species_name):
+    #substitute all capital letters, replace every succession of chars that are not letters to one underscore
     standard_species_name = re.sub(r'[)]$', '', species_name)
     standard_species_name = re.sub(r'[ _),-.(=]+ *', '_', standard_species_name)
     return standard_species_name.lower()
@@ -66,6 +61,11 @@ def get_ensembl_url_root(kingdom):
     return root
 
 def test_ensembl_species_exists(kingdom, url, species_name):
+    """
+    Test if a species exist on the ftp & return the species name with the species_line if so.
+    if the species_name matches a single string, then this string will be returned as the species name
+    if the species_name matches several strings, then an error is printed with all the possible species to enter for a new run
+    """
     print("____________________________________________________________")
     print ("*** Testing whether %s is referenced in Ensembl %s" % (species_name, kingdom))
     list_species_file_name = 'species_Ensembl%s%s.txt' % (kingdom[0].upper(), kingdom[1:])
@@ -111,7 +111,10 @@ def test_ensembl_species_exists(kingdom, url, species_name):
             if exact_match:
                 print("-> Referenced !\n")
                 return species_name, species_lines[i]
-        msg = 'The string \'%s\' has been matched against the list of Ensembl Species but is not a complete species name.\nPlease retry with one of the following species names:\n%s' % (species_name, list_species[0:])
+        msg = ("The string \'%s\' has been matched against the list of Ensembl Species but is not a complete species name.\n"
+                "Please retry with one of these following species names:\n" % species_name)
+        for s in list_species:
+            msg = ("%s- %s\n" % (msg, s))
         sys.exit(msg)
 
 def get_ensembl_collection(kingdom, species_line):
@@ -128,13 +131,19 @@ def get_ensembl_gtf_archive_name(url_dir, species_name):
     print("____________________________________________________________")
     print("*** Extracting the gtf archive name of %s" % species_name)
     gtf_archive_regex = re.compile('%s\..*\.[0-9]+\.gtf\.gz' % species_name, flags = re.IGNORECASE)
+    chr_gtf_archive_regex = re.compile('%s\..*\.[0-9]+\.chr\.gtf\.gz' % species_name, flags = re.IGNORECASE)
     dir_content = get_page_content(url_dir)
     gtf_archive_match = re.search(gtf_archive_regex, dir_content)
+    chr_gtf_archive_match = re.search(chr_gtf_archive_regex, dir_content)
     if not gtf_archive_match:
         sys.exit('The species is referenced on Ensembl but error of nomenclature led to download failure')
+    if not chr_gtf_archive_match:
+        chr_gtf_archive_name = ""
+    else:
+        chr_gtf_archive_name = chr_gtf_archive_match.group(0)
     gtf_archive_name = gtf_archive_match.group(0)
     print("-> Extracted !\n")
-    return gtf_archive_name
+    return gtf_archive_name, chr_gtf_archive_name
 
 def get_ensembl_gtf_archive(kingdom, url, species_name, species_line):
     if kingdom != 'vertebrates':
@@ -144,12 +153,16 @@ def get_ensembl_gtf_archive(kingdom, url, species_name, species_line):
             if collection != None:
                 url = url + "%s/" % collection
     final_url = url + species_name + '/'
-    gtf_archive_name = get_ensembl_gtf_archive_name(final_url, species_name)
+    gtf_archive_name, chr_gtf_archive_name = get_ensembl_gtf_archive_name(final_url, species_name)
     print("____________________________________________________________")
     print("*** Download the gtf archive of %s" % species_name)
     download_file(final_url + gtf_archive_name, gtf_archive_name)
     print("-> Downloaded !\n")
-    return gtf_archive_name
+    if chr_gtf_archive_name:
+        print("*** Download the chr gtf archive of %s" % species_name)
+        download_file(final_url + chr_gtf_archive_name, chr_gtf_archive_name)
+        print("-> Downloaded !\n")
+    return gtf_archive_name, chr_gtf_archive_name
 
 def generate_alfa_indexes(path_to_alfa, gtf_file_name):
     print("____________________________________________________________")
@@ -174,6 +187,18 @@ def get_data_table_new_entry(gtf_archive_name):
     entry_dict = { 'species': species, 'version': version, 'release': release, 'value': value, 'dbkey': dbkey, 'name': name, 'prefix': prefix }
     return entry_dict
 
+def chr_get_data_table_new_entry(chr_gtf_archive_name):
+    info_list = chr_gtf_archive_name.split('.')
+    species = info_list[0]
+    version = info_list[1]
+    release = info_list[2]
+    value = '%s_%s_%s.chr' % (species, version, release)
+    dbkey = value
+    name = '%s: %s (release %s) - Chr' % (species, version, release)
+    prefix = '%s.%s.%s.chr' % (species, version, release)
+    entry_dict = { 'species': species, 'version': version, 'release': release, 'value': value, 'dbkey': dbkey, 'name': name, 'prefix': prefix }
+    return entry_dict
+
 def main():
     options, args = get_arg()
     tool_dir = args[0]
@@ -184,6 +209,10 @@ def main():
         msg = 'No json output file specified'
         sys.exit(msg)
     output_filename = options.output_filename
+
+    # Interestingly the output file to return is not empty initially.
+    # it contains a dictionary, with notably the path to the dir where the alfa_indexes
+    # are expected to be found
     params = from_json_string(open(output_filename).read())
     target_directory = params['output_data'][0]['extra_files_path']
     os.mkdir(target_directory)
@@ -192,25 +221,34 @@ def main():
     os.chdir(tmp_dir)
 
     data_manager_dict = {}
+    data_manager_dict['data_tables'] = data_manager_dict.get('data_tables', {})
+    data_manager_dict['data_tables']['alfa_indexes'] = data_manager_dict['data_tables'].get('alfa_indexes', [])
 
     if options.ensembl_info:
         kingdom, species_name = options.ensembl_info
         species_name = standardize_species_name(species_name)
         url = get_ensembl_url_root(kingdom)
         species_name, species_line = test_ensembl_species_exists(kingdom, url, species_name)
-        gtf_archive_name = get_ensembl_gtf_archive(kingdom, url, species_name, species_line)
+        gtf_archive_name, chr_gtf_archive_name = get_ensembl_gtf_archive(kingdom, url, species_name, species_line)
         data_table_entry = get_data_table_new_entry(gtf_archive_name)
         gtf_file_name = '%s.gtf' % data_table_entry['prefix']
         uncompress_gz(gtf_archive_name, gtf_file_name)
         generate_alfa_indexes(path_to_alfa, gtf_file_name)
         stranded_index_name = '%s.stranded.index' % data_table_entry['prefix']
         unstranded_index_name = '%s.unstranded.index' % data_table_entry['prefix']
-        add_data_table_entry(data_manager_dict, data_table_entry)
+        data_manager_dict['data_tables']['alfa_indexes'].append(data_table_entry)
+        if chr_gtf_archive_name:
+            data_table_entry = chr_get_data_table_new_entry(chr_gtf_archive_name)
+            chr_gtf_file_name = '%s.gtf' % data_table_entry['prefix']
+            uncompress_gz(chr_gtf_archive_name, chr_gtf_file_name)
+            generate_alfa_indexes(path_to_alfa, chr_gtf_file_name)
+            chr_stranded_index_name = '%s.stranded.index' % data_table_entry['prefix']
+            chr_unstranded_index_name = '%s.unstranded.index' % data_table_entry['prefix']
+            data_manager_dict['data_tables']['alfa_indexes'].append(data_table_entry)
+
 
     print("____________________________________________________________")
     print("*** General Info")
-    print("TMP DIR:\t%s" % tmp_dir)
-    print("TARGET DIR:\t%s" % target_directory)
     print("URL ROOT:\t%s" % url)
     print("SPECIES:\t%s" % data_table_entry['species'])
     print("VERSION:\t%s" % data_table_entry['version'])
@@ -219,13 +257,14 @@ def main():
     print("DBKEY:\t%s" % data_table_entry['dbkey'])
     print("NAME:\t%s" % data_table_entry['name'])
     print("PREFIX:\t%s" % data_table_entry['prefix'])
-    print("____________________________________________________________")
-    print("*** Intial dictionary")
-    print("%s" % params)
-
 
     shutil.copyfile(stranded_index_name, os.path.join(target_directory, stranded_index_name))
     shutil.copyfile(unstranded_index_name, os.path.join(target_directory, unstranded_index_name))
+
+    if chr_gtf_archive_name:
+        shutil.copyfile(chr_stranded_index_name, os.path.join(target_directory, stranded_index_name))
+        shutil.copyfile(chr_unstranded_index_name, os.path.join(target_directory, unstranded_index_name))
+
 
     cleanup_before_exit(tmp_dir)
 
