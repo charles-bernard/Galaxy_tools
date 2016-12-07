@@ -1,1 +1,0 @@
-awk -v win_len=100 -v min_cov=10 -v cyt_CG=3 -v cyt_CHG=3 -v cyt_CHH=4 -f cytosine_report_to_methylkit_input.awk SRR342391_test_trimmed.fq_bismark_bt2.deduplicated.CX_report.txt > awk_output.txt
