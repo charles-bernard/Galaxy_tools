@@ -1,0 +1,198 @@
+<tool id="methylkit" name="methylKit" version="0.9.4">
+
+  <description>Runs differential analysis of methylation between two genome-wide methylation profiles</description>
+
+  <command interpreter="python">
+<![CDATA[
+    methylkit_wrapper.py 
+
+    ## DIRECTORIES 
+
+    --tool_dir "$__tool_directory__"
+    
+    ## PROFILE A 
+
+    --name_A "$profile_A.name_A"
+
+    #set files_A = '"\;--infile--\:"'.join( [ str( $file ) for $file in $profile_A.cytosine_report_A ] )
+    --files_A "${files_A}"
+
+    ## PROFILE B 
+
+    --name_B "$profile_B.name_B"
+
+    #set files_B = '"\;--infile--\:"'.join( [ str( $file ) for $file in $profile_B.cytosine_report_B ] )
+    --files_B "${files_B}"
+
+    ## SETTINGS 
+
+    --n_threads $settings.n_threads
+    --chr_len "${settings.built_in_igv_genomes_chr_sizes.fields.path}"
+    --win $settings.window
+    --min_cov $settings.min_cov
+    --max_cov $settings.max_cov
+    --qvalue $settings.qvalue
+    #if $settings.pool
+      --pool
+    #end if
+
+    --analysis_type $analysis_type.analysis_type_selector
+    #if str ( $analysis_type.analysis_type_selector ) == "context_dependent"
+      --diff_CG $analysis_type.diff_CG
+      --diff_CHG $analysis_type.diff_CHG
+      --diff_CHH $analysis_type.diff_CHH
+    #else if str ( $analysis_type.analysis_type_selector ) == "context_independent"
+      --diff_C $analysis_type.diff_C
+    #else
+      --diff_C $analysis_type.diff_C
+      --diff_CG $analysis_type.diff_CG
+      --diff_CHG $analysis_type.diff_CHG
+      --diff_CHH $analysis_type.diff_CHH
+    #end if
+
+    ## OUTPUTS
+
+    #if $output.windows_report
+      #if str ( $analysis_type.analysis_type_selector ) == "context_dependent"
+        --win_report_CG $windows_report_CG
+        --win_report_CHG $windows_report_CHG
+        --win_report_CHH $windows_report_CHH
+      #else if str ( $analysis_type.analysis_type_selector ) == "context_independent"
+        --win_report_C $windows_report_C
+      #else
+        --win_report_C $windows_report_C
+        --win_report_CG $windows_report_CG
+        --win_report_CHG $windows_report_CHG
+        --win_report_CHH $windows_report_CHH
+      #end if
+    #end if
+
+    #if $output.plot_diff or $output.plot_coverage or $output.plot_correlation or $output.plot_pca
+      --plot $plots
+      #if $output.plot_diff
+        --plot_diff
+      #end if
+      #if $output.plot_meth
+        --plot_meth
+      #end if
+      #if $output.plot_coverage
+        --plot_cov
+      #end if
+      #if $output.plot_correlation
+        --plot_cor
+      #end if
+      #if $output.plot_pca
+        --plot_pca
+      #end if
+    #end if
+
+    #if $output.cmd_report
+      --cmd_report $cmd_report
+    #end if
+    #if $output.log_report
+      --log_report $log_report
+    #end if
+]]>
+  </command>
+  <inputs>
+  	<section name="profile_A" title="Define the genome-wide DNA methylation profile A" expanded="True">
+  		<param name="name_A" value="methylomeA" type="text" size="20" label="Name of the profile A">
+  			<validator type="empty_field" message="Please, specify a name for the methylation profile A."/>
+  		</param>
+		<param name="cytosine_report_A" type="data" format="txt" multiple="True" label="Submit one or several Bismark genome-wide cytosine methylation report(s)" />
+  	</section>
+
+  	<section name="profile_B" title="Define the genome-wide DNA methylation profile B" expanded="True">
+  		<param name="name_B" value="methylomeB" type="text" size="20" label="Name of the profile B">
+  			<validator type="empty_field" message="Please, specify a name for the methylation profile B."/>
+  		</param>
+  		<param name="cytosine_report_B" type="data" format="txt" multiple="True" label="Submit one or several Bismark genome-wide cytosine methylation report(s)" />
+  	</section>
+
+    <section name="settings" title="Settings" expanded="True">
+      <param name="n_threads" type="integer" value="10" label="Enter the number of threads allowed for the multiprocessing" />
+		  <param name="built_in_igv_genomes_chr_sizes" type="select" label="Select Reference Genome" help="If your genome of interest is not listed, contact your Galaxy admin">
+        <options from_data_table="igv_genomes_chr_sizes">
+          <filter type="sort_by" column="name"/>
+          <validator type="no_options" message="No indexes are available for the selected input dataset"/>
+        </options>
+      </param>
+  		<param name="window" type="integer" value="100" label="Window length (in bp) for tilling the genome" />
+  		<param name="min_cov" type="integer" value="1" label="Minimum coverage recquired for a cytosine to be retained within a genomic window" />
+      <param name="max_cov" type="integer" value="100" label="Maximum coverage recquired for a cytosine to be retained within a genomic window" />
+      <param name="qvalue" type="float" value="0.01" label="Q-value threshold to retain significantly differentially methylated window" />
+      <param name="pool" type="boolean" truevalue="true" falsevalue="False" checked="True" label="Pool replicates?" help="Pool samples together if they belong to the same profile?" />
+    </section>
+
+    <conditional name="analysis_type">
+      <param name="analysis_type_selector" type="select" label="Choose the type of differential analysis to run">
+        <option value="context_dependent" selected="true">Context Dependent Analysis</option>
+        <option value="context_independent">Context Independent Analysis</option>
+        <option value="both">Both</option>
+      </param>
+      <when value="context_dependent">
+        <param name="diff_CG" type="integer" value="40" label="Difference of cytosines methylation percentage in CG context required to retain a genomic window" />
+        <param name="diff_CHG" type="integer" value="20" label="Difference of cytosines methylation percentage in CHG context required to retain a genomic window" />
+        <param name="diff_CHH" type="integer" value="20" label="Difference of cytosines methylation percentage in CHH context required to retain a genomic window" />
+      </when>
+      <when value="context_independent">
+        <param name="diff_C" type="integer" value="20" label="Difference of cytosines methylation percentage recquired to retain a genomic window" />
+      </when>
+      <when value="both">
+        <param name="diff_C" type="integer" value="20" label="Difference of cytosines methylation percentage recquired to retain a genomic window (context independent analysis)" />
+        <param name="diff_CG" type="integer" value="40" label="Difference of cytosines methylation percentage in CG context required to retain a genomic window" />
+        <param name="diff_CHG" type="integer" value="20" label="Difference of cytosines methylation percentage in CHG context required to retain a genomic window" />
+        <param name="diff_CHH" type="integer" value="20" label="Difference of cytosines methylation percentage in CHH context required to retain a genomic window" />        
+      </when>
+    </conditional>
+
+    <section name="output" title="Choose the output files to be returned" expanded="False">
+      <param name="windows_report" type="boolean" truevalue="true" falsevalue="false" checked="True" label="Windows Exhaustive Report?" help="Display for each genomic window in each context: (i) the methylation difference in percentage between the two profiles with the according significance indicators, (ii) the coverage, the count of methylated C and unmethylated C of each sample" />
+      <param name="plot_coverage" type="boolean" truevalue="true" falsevalue="false" checked="True" label="Plot distribution of cytosine coverage?" />
+      <param name="plot_meth" type="boolean" truevalue="true" falsevalue="false" checked="True" label="Plot distribution of cytosine methylation level?" help="Plot for each sample of each context: the distribution of cytosine methylation" />
+      <param name="plot_correlation" type="boolean" truevalue="true" falsevalue="false" checked="True" label="Plot pairwise correlation between methylation profiles of the sample?" />
+      <param name="plot_pca" type="boolean" truevalue="true" falsevalue="false" checked="True" label="Plot PCA between replicates within a profile?" help="Ignore if your two profiles are both defined by only one sample" />
+      <param name="plot_diff" type="boolean" truevalue="true" falsevalue="false" checked="True" label="Plot Distribution of Methylation Differences?" help="Plot for each context: the distribution of methylation difference between the two profiles" />
+      <param name="cmd_report" type="boolean" truevalue="true" falsevalue="false" checked="True" label="Print the executed commands into a report file?" />
+      <param name="log_report" type="boolean" truevalue="true" falsevalue="false" checked="False" label="Generate a log report?" />
+    </section>
+  </inputs>
+
+  <outputs>
+    <data name="windows_report_C" format="tabular" label="${tool.name} on ${on_string}: Windows Exhaustive Report (all C)">
+      <filter> output['windows_report'] is True and ( analysis_type['analysis_type_selector'] == 'context_independent' or analysis_type['analysis_type_selector'] == 'both' ) </filter>
+    </data>
+    <data name="windows_report_CG" format="tabular" label="${tool.name} on ${on_string}: Windows Exhaustive Report (CG)">
+      <filter> output['windows_report'] is True and ( analysis_type['analysis_type_selector'] == 'context_dependent' or analysis_type['analysis_type_selector'] == 'both' ) </filter>
+    </data>
+    <data name="windows_report_CHG" format="tabular" label="${tool.name} on ${on_string}: Windows Exhaustive Report (CHG)">
+      <filter> output['windows_report'] is True and ( analysis_type['analysis_type_selector'] == 'context_dependent' or analysis_type['analysis_type_selector'] == 'both' ) </filter>
+    </data>
+    <data name="windows_report_CHH" format="tabular" label="${tool.name} on ${on_string}: Windows Exhaustive Report (CHH)">
+      <filter> output['windows_report'] is True and ( analysis_type['analysis_type_selector'] == 'context_dependent' or analysis_type['analysis_type_selector'] == 'both' ) </filter>
+    </data>
+    <data name="plots" format="pdf" label="${tool.name} on ${on_string}: Plots">
+      <filter> output['plot_diff'] is True or output['plot_coverage'] is True or output['plot_correlation'] is True or output['plot_pca'] is True </filter>
+    </data>
+    <data name="cmd_report" format="txt" label="${tool.name} on ${on_string}: Commands Report">
+      <filter> output['cmd_report'] is True </filter>
+    </data>
+    <data name="log_report" format="txt" label="${tool.name} on ${on_string}: Log Report">
+      <filter> output['log_report'] is True </filter>
+    </data>
+  </outputs>
+
+  <tests></tests>
+
+  <help>
+<![CDATA[
+
+**What it does**
+
+  | This tool takes as inputs two genome-wide cytosine methylation profiles and performs pairwise comparisons to reveal the differences of methylation between the two profiles. To proceed, methylKit scans the reference genome by windows of N bp (100 bp by default) and compares the methylation status of the two profiles for each window.
+  |
+  | Each of the two profiles is defined by one or several genome-wide cytosine methylation reports, given as output by the tool **Bismark Meth. Extractor**
+
+]]>
+  </help>
+</tool>
