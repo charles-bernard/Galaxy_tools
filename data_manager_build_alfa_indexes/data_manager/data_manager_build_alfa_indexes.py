@@ -44,8 +44,13 @@ def uncompress_gz(gz_file_name, uncompressed_file_name):
     uncompressed_file.close()
     print("-> Uncompressed !\n")
 
+def add_data_table_entry( data_manager_dict, data_table_entry ):
+    data_manager_dict['data_tables'] = data_manager_dict.get( 'data_tables', {} )
+    data_manager_dict['data_tables']['alfa_indexes'] = data_manager_dict['data_tables'].get( 'alfa_indexes', data_table_entry )
+    return data_manager_dict
+
 def standardize_species_name(species_name):
-    #substitute all capital letters, replace every succession of chars that are not letters to one underscore
+    # substitute all capital letters, replace every succession of chars that are not letters to one underscore
     standard_species_name = re.sub(r'[)]$', '', species_name)
     standard_species_name = re.sub(r'[ _),-.(=]+ *', '_', standard_species_name)
     return standard_species_name.lower()
@@ -131,19 +136,13 @@ def get_ensembl_gtf_archive_name(url_dir, species_name):
     print("____________________________________________________________")
     print("*** Extracting the gtf archive name of %s" % species_name)
     gtf_archive_regex = re.compile('%s\..*\.[0-9]+\.gtf\.gz' % species_name, flags = re.IGNORECASE)
-    chr_gtf_archive_regex = re.compile('%s\..*\.[0-9]+\.chr\.gtf\.gz' % species_name, flags = re.IGNORECASE)
     dir_content = get_page_content(url_dir)
     gtf_archive_match = re.search(gtf_archive_regex, dir_content)
-    chr_gtf_archive_match = re.search(chr_gtf_archive_regex, dir_content)
     if not gtf_archive_match:
         sys.exit('The species is referenced on Ensembl but error of nomenclature led to download failure')
-    if not chr_gtf_archive_match:
-        chr_gtf_archive_name = ""
-    else:
-        chr_gtf_archive_name = chr_gtf_archive_match.group(0)
     gtf_archive_name = gtf_archive_match.group(0)
     print("-> Extracted !\n")
-    return gtf_archive_name, chr_gtf_archive_name
+    return gtf_archive_name
 
 def get_ensembl_gtf_archive(kingdom, url, species_name, species_line):
     if kingdom != 'vertebrates':
@@ -153,16 +152,12 @@ def get_ensembl_gtf_archive(kingdom, url, species_name, species_line):
             if collection != None:
                 url = url + "%s/" % collection
     final_url = url + species_name + '/'
-    gtf_archive_name, chr_gtf_archive_name = get_ensembl_gtf_archive_name(final_url, species_name)
+    gtf_archive_name = get_ensembl_gtf_archive_name(final_url, species_name)
     print("____________________________________________________________")
     print("*** Download the gtf archive of %s" % species_name)
     download_file(final_url + gtf_archive_name, gtf_archive_name)
     print("-> Downloaded !\n")
-    if chr_gtf_archive_name:
-        print("*** Download the chr gtf archive of %s" % species_name)
-        download_file(final_url + chr_gtf_archive_name, chr_gtf_archive_name)
-        print("-> Downloaded !\n")
-    return gtf_archive_name, chr_gtf_archive_name
+    return gtf_archive_name
 
 def generate_alfa_indexes(path_to_alfa, gtf_file_name):
     print("____________________________________________________________")
@@ -184,18 +179,6 @@ def get_data_table_new_entry(gtf_archive_name):
     dbkey = value
     name = '%s: %s (release %s)' % (species, version, release)
     prefix = '%s.%s.%s' % (species, version, release)
-    entry_dict = { 'species': species, 'version': version, 'release': release, 'value': value, 'dbkey': dbkey, 'name': name, 'prefix': prefix }
-    return entry_dict
-
-def chr_get_data_table_new_entry(chr_gtf_archive_name):
-    info_list = chr_gtf_archive_name.split('.')
-    species = info_list[0]
-    version = info_list[1]
-    release = info_list[2]
-    value = '%s_%s_%s.chr' % (species, version, release)
-    dbkey = value
-    name = '%s: %s (release %s) - Chr' % (species, version, release)
-    prefix = '%s.%s.%s.chr' % (species, version, release)
     entry_dict = { 'species': species, 'version': version, 'release': release, 'value': value, 'dbkey': dbkey, 'name': name, 'prefix': prefix }
     return entry_dict
 
@@ -221,31 +204,20 @@ def main():
     os.chdir(tmp_dir)
 
     data_manager_dict = {}
-    data_manager_dict['data_tables'] = data_manager_dict.get('data_tables', {})
-    data_manager_dict['data_tables']['alfa_indexes'] = data_manager_dict['data_tables'].get('alfa_indexes', [])
 
     if options.ensembl_info:
         kingdom, species_name = options.ensembl_info
         species_name = standardize_species_name(species_name)
         url = get_ensembl_url_root(kingdom)
         species_name, species_line = test_ensembl_species_exists(kingdom, url, species_name)
-        gtf_archive_name, chr_gtf_archive_name = get_ensembl_gtf_archive(kingdom, url, species_name, species_line)
+        gtf_archive_name = get_ensembl_gtf_archive(kingdom, url, species_name, species_line)
         data_table_entry = get_data_table_new_entry(gtf_archive_name)
         gtf_file_name = '%s.gtf' % data_table_entry['prefix']
         uncompress_gz(gtf_archive_name, gtf_file_name)
         generate_alfa_indexes(path_to_alfa, gtf_file_name)
         stranded_index_name = '%s.stranded.index' % data_table_entry['prefix']
         unstranded_index_name = '%s.unstranded.index' % data_table_entry['prefix']
-        data_manager_dict['data_tables']['alfa_indexes'].append(data_table_entry)
-        if chr_gtf_archive_name:
-            data_table_entry = chr_get_data_table_new_entry(chr_gtf_archive_name)
-            chr_gtf_file_name = '%s.gtf' % data_table_entry['prefix']
-            uncompress_gz(chr_gtf_archive_name, chr_gtf_file_name)
-            generate_alfa_indexes(path_to_alfa, chr_gtf_file_name)
-            chr_stranded_index_name = '%s.stranded.index' % data_table_entry['prefix']
-            chr_unstranded_index_name = '%s.unstranded.index' % data_table_entry['prefix']
-            data_manager_dict['data_tables']['alfa_indexes'].append(data_table_entry)
-
+        add_data_table_entry(data_manager_dict, data_table_entry)
 
     print("____________________________________________________________")
     print("*** General Info")
@@ -260,11 +232,6 @@ def main():
 
     shutil.copyfile(stranded_index_name, os.path.join(target_directory, stranded_index_name))
     shutil.copyfile(unstranded_index_name, os.path.join(target_directory, unstranded_index_name))
-
-    if chr_gtf_archive_name:
-        shutil.copyfile(chr_stranded_index_name, os.path.join(target_directory, stranded_index_name))
-        shutil.copyfile(chr_unstranded_index_name, os.path.join(target_directory, unstranded_index_name))
-
 
     cleanup_before_exit(tmp_dir)
 
