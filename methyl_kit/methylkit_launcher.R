@@ -104,14 +104,14 @@ meth_objects <- read(files.list, sample.id=ids.list,
 #############################################################################
 windows <- tileMethylCounts(meth_objects, win.size=opt$win, step.size=opt$win);
 meth_table <- unite(windows, destrand=FALSE);
-if( opt$pool == "true" ) {
+if( opt$pool == "True" ) {
 	meth_table <- pool(meth_table, c(opt$name_group_A, opt$name_group_B));
 }
 
 #############################################################################
 # RENAME THE COLUMNS BY THE NAME OF THE SAMPLE TO WHICH THEY BELONG
 #############################################################################
-if( opt$pool == "true" ) {
+if( opt$pool == "True" ) {
 	names(meth_table)[5:10]=c("coverageA", "numCsA", "numTsA", "coverageB", "numCsB", "numTsB");
 } else {
 	columns_A=NULL; columns_B=NULL;
