@@ -2,10 +2,10 @@
 
 # FUNCTION:
 ## Turns a cytosine report with the following structure:
-## <chr>	<base>	<strand>	<countC>	<countT>	<context>	<exact_context>
+## <chr> <base> <strand> <countC> <countT> <context> <exact_context>
 ##
 ## to a methylKit input file with the following structure:
-## <chrBase>	<chr>	<base>	<strand>	<coverage>	<freqC>	<freqT>
+## <chrBase> <chr> <base> <strand> <coverage> <freqC> <freqT>
 ##
 ## While Filtering every cytosine which do not satisifies the conditions:
 ## 	- minimum & max coverage
