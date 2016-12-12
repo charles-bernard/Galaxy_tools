@@ -92,7 +92,7 @@ meth_objects <- read(files.list, sample.id=ids.list,
 # factor derived from differences between median of coverage distributions
 #############################################################################
 if( opt$norm == "True" ) {
-	meth_objects=normalizeCoverage(meth_objects, method="median")
+	meth_objects <- normalizeCoverage(meth_objects, method="median")
 }
 
 #############################################################################
