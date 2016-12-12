@@ -364,6 +364,6 @@ def __main__():
     """
     REMOVE TEMPORARY WORKING DIR
     """
-    #cleanup_before_exit(working_dir)
+    cleanup_before_exit(working_dir)
 
 if __name__=="__main__": __main__()
