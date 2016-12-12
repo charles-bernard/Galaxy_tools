@@ -26,6 +26,7 @@ option_list = list(
 	make_option("--diff", dest="diff", action="store", type="integer"),
 	make_option("--qv", dest="qv", action="store", type="double"),
 	make_option("--win", dest="win", action="store", type="integer"),
+	make_option("--norm", dest="norm", action="store"),
 	make_option("--pool", dest="pool", action="store"),
 	make_option("--out_dir", dest="out_dir", action="store"),
 	make_option("--win_report", dest="win_report", action="store"),
@@ -63,7 +64,7 @@ nB=length(files_B[[1]]);
 treatment=c(rep(0, nA), rep(1, nB));
 
 #############################################################################
-# CREATE METHYLRAWLIST OBJECTS
+# CREATE ONE METHYLRAW OBJECT PER INPUT FILE
 #############################################################################
 # Example of a methyl row object:
 # methylRaw object with 142072 rows
@@ -85,13 +86,22 @@ meth_objects <- read(files.list, sample.id=ids.list,
 	assembly="", header=FALSE, treatment=treatment, context=opt$context);
 
 #############################################################################
+# NORMALIZE COVERAGE 
+#############################################################################
+# The function normalizes coverage values between samples using a scaling
+# factor derived from differences between median of coverage distributions
+#############################################################################
+if( opt$norm == "True" ) {
+	meth_objects=normalizeCoverage(meth_objects, method="median")
+}
+
+#############################################################################
 # CREATE THE GENOMIC WINDOWS
 #############################################################################
 # 1. Create the windows for tilling the genome
 # 2. Merge all samples to one table by using base-pair locations that are 
 # covered in all samples
 # 3. Eventually pool the samples of the same group together
-
 #############################################################################
 # Example of a meth_table if pool is true: 
 #     chr start  end strand coverageA numCsA numTsA coverageB numCsB numTsB
@@ -143,7 +153,7 @@ hypo_diff <- filtered_diff_table[filtered_diff_table$meth.diff < 0,]$meth.diff;
 hyper_diff <- filtered_diff_table[filtered_diff_table$meth.diff > 0,]$meth.diff;
 
 #############################################################################
-# WRITE THE RESULTING OUTPUT TABLES
+# WRITE THE RESULTING OUTPUT TABLE
 #############################################################################
 prefix=paste(opt$name_group_A, opt$name_group_B, sep="_vs_");
 if( !is.null(opt$win_report) ) {
@@ -266,13 +276,13 @@ if( !is.null(opt$plot) ) {
 	}
 
 #############################################################################
-# Plot the correlation if replicates within a group
+# Plot correlation of methylation % distribution between samples
 #############################################################################
 	if( !is.null(opt$plot_cor) ) {
 		getCorrelation(meth_table, plot=TRUE);
 	}
 #############################################################################
-# Plot PCA if replicates within a group
+# Plot PCA 
 #############################################################################$
 	if( !is.null(opt$plot_pca) ) {
 		PCASamples(meth_table, comp=c(1,2));

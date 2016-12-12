@@ -11,10 +11,6 @@ import sys
 import tempfile
 
 
-def exit_and_explain(msg, logger):
-    logger.critical(msg)
-    sys.exit(msg)
-
 def cleanup_before_exit(tmp_dir):
     if tmp_dir and os.path.exists(tmp_dir):
         shutil.rmtree(tmp_dir)
@@ -50,15 +46,16 @@ def determine_context(analysis, diff_CG, diff_CHG, diff_CHH, diff_C, report_CG, 
     return context, diff, report
 
 def convert_Creport_to_methkit(awk_cmd, infilename, logger):
-    awk_result = subprocess.Popen(args=awk_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    awk_result = subprocess.Popen(args=awk_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     awk_out, awk_err = awk_result.communicate()
     if awk_out:
         logger.info("Converting \"%s\" into methyl kit input files produced the additional awk output:\n"
-                    "STDOUT: \n%s\n" % awk_out)
+                    "STDOUT: \n%s\n" % (infilename, awk_out))
     if awk_err:
         msg = "The tool failed to convert \"%s\" into methyl kit input files\n\
         ERROR: \n%s\n" % (infilename, awk_err)
-        exit_and_explain(msg, logger)
+        logger.critical(msg)
+        sys.exit(msg)
     return
 
 def launch_methylkit(methylkit_cmd, context, logger):
@@ -70,7 +67,8 @@ def launch_methylkit(methylkit_cmd, context, logger):
     if methylkit_err:
         msg = "The tool failed to run methylkit differential analysis for %s context\n\
         ERROR: \n%s\n" % (context, methylkit_err)
-        exit_and_explain(msg, logger)
+        logger.critical(msg)
+        sys.exit(msg)
     return
 
 def merge_pdf(list_pdfs, output_filename):
@@ -113,6 +111,7 @@ def __main__():
     parser.add_option("--win", dest="win", action='store', nargs=1, metavar="win", type="int")
     parser.add_option("--min_cov", dest="min_cov", action='store', nargs=1, metavar="min_cov", type="int")
     parser.add_option("--max_cov", dest="max_cov", action='store', nargs=1, metavar="max_cov", type="int")
+    parser.add_option("--norm", action="store_true")
     parser.add_option("--qvalue", dest="qvalue", action='store', nargs=1, metavar="qvalue", type="float")
     parser.add_option("--pool", action="store_true")
     parser.add_option("--analysis_type", dest='analysis_type', action='store', nargs=1, metavar='analysis_type', type='str')
@@ -144,7 +143,7 @@ def __main__():
     """
     if not(opt.win_report_C or opt.win_report_CG or opt.win_report_CHG or opt.win_report_CHH):
         if not opt.plot:
-            exit_and_explain('ERROR:\nNo output files to return !\n')
+            sys.exit('ERROR:\nNo output files to return !\n')
         is_win_report = False
     else:
         is_win_report = True
@@ -323,11 +322,11 @@ def __main__():
         methylkit_cmd[c] = ("Rscript --verbose \"%s\" --n_threads %d "
                         "--name_group_A \"%s\" --files_A \"%s\" --ids_A \"%s\" "
                         "--name_group_B \"%s\" --files_B \"%s\" --ids_B \"%s\" "
-                        "--context %s --diff %d --qv %.3f --win %d --pool %s --out_dir \"%s\" " \
+                        "--context %s --diff %d --qv %.3f --win %d --norm %s --pool %s --out_dir \"%s\" " \
                         % (methylkit_script, methkit_threads, \
                         opt.name_A, list_str_methkit_files_by_ctx_A[c], str_id_A, \
                         opt.name_B, list_str_methkit_files_by_ctx_B[c], str_id_B, \
-                        list_context[c], list_diff[c], opt.qvalue, opt.win, opt.pool, context_dir[c]))
+                        list_context[c], list_diff[c], opt.qvalue, opt.win, opt.norm, opt.pool, context_dir[c]))
         if is_win_report is True:
             methylkit_cmd[c]=("%s --win_report \"%s\" " % (methylkit_cmd[c], list_win_report[c]))
         if opt.plot:
@@ -365,6 +364,6 @@ def __main__():
     """
     REMOVE TEMPORARY WORKING DIR
     """
-    cleanup_before_exit(working_dir)
+    #cleanup_before_exit(working_dir)
 
 if __name__=="__main__": __main__()

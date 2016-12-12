@@ -35,6 +35,9 @@
     #if $settings.pool
       --pool
     #end if
+    #if $settings.norm
+      --norm
+    #end if
 
     --analysis_type $analysis_type.analysis_type_selector
     #if str ( $analysis_type.analysis_type_selector ) == "context_dependent"
@@ -120,8 +123,10 @@
   		<param name="window" type="integer" value="100" label="Window length (in bp) for tilling the genome" />
   		<param name="min_cov" type="integer" value="1" label="Minimum coverage recquired for a cytosine to be retained within a genomic window" />
       <param name="max_cov" type="integer" value="100" label="Maximum coverage recquired for a cytosine to be retained within a genomic window" />
-      <param name="qvalue" type="float" value="0.01" label="Q-value threshold to retain significantly differentially methylated window" />
+      <param name="norm" type="boolean" truevalue="true" falsevalue="False" checked="False" label="Normalize coverage values between samples ?" help="Coverage Normalization uses a scaling factor derived from differences between median of coverage distribution" />
       <param name="pool" type="boolean" truevalue="true" falsevalue="False" checked="True" label="Pool replicates?" help="Pool samples together if they belong to the same profile?" />
+      <param name="qvalue" type="float" value="0.01" label="Q-value threshold to retain significantly differentially methylated window" />
+      
     </section>
 
     <conditional name="analysis_type">
