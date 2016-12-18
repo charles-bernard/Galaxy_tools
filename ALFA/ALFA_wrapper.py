@@ -55,7 +55,7 @@ def get_input2_args(reads_list, format):
     if n%2 != 0:
         exit_and_explain('Problem with pairing reads filename and reads label')
     input2_args='-i'
-    k = 1
+    k = 0
     reads_filenames = [''] * (n/2)
     reads_labels = [''] * (n/2)
     for i in range(0, n, 2):
@@ -86,7 +86,7 @@ def merge_count_files(reads_labels):
     merged_count_file = open('count_file.txt', 'wb')
     for i in range(0, len(reads_labels)):
         current_count_file = open(reads_labels[i] + '.categories_counts', 'r')
-        merged_count_file.write('##LABEL: %s\n\n' % reads_label[i])
+        merged_count_file.write('##LABEL: %s\n\n' % reads_labels[i])
         merged_count_file.write(current_count_file.read())
         merged_count_file.write('__________________________________________________________________\n')
         current_count_file.close()
