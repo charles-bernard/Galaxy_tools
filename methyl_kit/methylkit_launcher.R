@@ -10,6 +10,8 @@ library(optparse);
 # > install_github("trevorld/optparse", repos=NULL, ref="master", dependencies=TRUE, type="source")
 library(plyr); 
 library(methylKit); 
+library(data.table)
+library(tictoc)
 
 #############################################################################
 # READ THE OPTIONS 
@@ -92,7 +94,7 @@ meth_objects <- read(files.list, sample.id=ids.list,
 # factor derived from differences between median of coverage distributions
 #############################################################################
 if( opt$norm == "True" ) {
-	meth_objects <- normalizeCoverage(meth_objects, method="median")
+	meth_objects=normalizeCoverage(meth_objects, method="median")
 }
 
 #############################################################################
@@ -102,6 +104,7 @@ if( opt$norm == "True" ) {
 # 2. Merge all samples to one table by using base-pair locations that are 
 # covered in all samples
 # 3. Eventually pool the samples of the same group together
+
 #############################################################################
 # Example of a meth_table if pool is true: 
 #     chr start  end strand coverageA numCsA numTsA coverageB numCsB numTsB
@@ -121,15 +124,28 @@ if( opt$pool == "True" ) {
 #############################################################################
 # RENAME THE COLUMNS BY THE NAME OF THE SAMPLE TO WHICH THEY BELONG
 #############################################################################
+# if( opt$pool == "True" ) {
+# 	names(meth_table)[5:10]=c("coverageA", "numCsA", "numTsA", "coverageB", "numCsB", "numTsB");
+# } else {
+# 	columns_A=NULL; columns_B=NULL;
+# 	for (i in 1:nA) {
+# 		columns_A=c(columns_A, c(paste("coverageA", i, sep=""), paste("numCsA", i, sep=""), paste("numTsA", i, sep="")));
+# 	}
+# 	for (i in 1:nB) {
+# 		columns_B=c(columns_B, c(paste("coverageB", i, sep=""), paste("numCsB", i, sep=""), paste("numTsB", i, sep="")));
+# 	}
+# 	names(meth_table)[5:(5+3*nA-1)]=columns_A;
+# 	names(meth_table)[(5+3*nA):(5+3*nA+3*nB-1)]=columns_B;
+# }
 if( opt$pool == "True" ) {
-	names(meth_table)[5:10]=c("coverageA", "numCsA", "numTsA", "coverageB", "numCsB", "numTsB");
+	names(meth_table)[5:10]=c("tot_cov_A", "cov_Cs_A", "cov_Ts_A", "tot_cov_B", "cov_Cs_B", "cov_Ts_B");
 } else {
 	columns_A=NULL; columns_B=NULL;
 	for (i in 1:nA) {
-		columns_A=c(columns_A, c(paste("coverageA", i, sep=""), paste("numCsA", i, sep=""), paste("numTsA", i, sep="")));
+		columns_A=c(columns_A, c(paste("tot_cov_A", i, sep=""), paste("cov_Cs_A", i, sep=""), paste("cov_Ts_A", i, sep="")));
 	}
 	for (i in 1:nB) {
-		columns_B=c(columns_B, c(paste("coverageB", i, sep=""), paste("numCsB", i, sep=""), paste("numTsB", i, sep="")));
+		columns_B=c(columns_B, c(paste("tot_cov_B", i, sep=""), paste("cov_Cs_B", i, sep=""), paste("cov_Ts_B", i, sep="")));
 	}
 	names(meth_table)[5:(5+3*nA-1)]=columns_A;
 	names(meth_table)[(5+3*nA):(5+3*nA+3*nB-1)]=columns_B;
@@ -152,14 +168,99 @@ filtered_diff_table <- diff_table[diff_table$qvalue < opt$qv & abs(diff_table$me
 hypo_diff <- filtered_diff_table[filtered_diff_table$meth.diff < 0,]$meth.diff;
 hyper_diff <- filtered_diff_table[filtered_diff_table$meth.diff > 0,]$meth.diff;
 
+############################################################################
+# GET THE LIST OF ALL COORDINATES ALLOWED BY THE RETAINED WINDOWS
+############################################################################
+# win_ranges stores the ranges of coordinates of all retained windows:
+# Example:
+#       chr start   end
+# 2916 Chr4  7201  7300
+# 4445 Chr5 62001 62100
+#
+# win_coord_sq: Convert these ranges to sequences of allowed coordinates 
+# win_chr_rep: Without forgetting the corresponding chromosome name 
+# win_winstart_rep: Nor the start of the window
+# by combining these vectors, we obtain the resulting allowed_coord table:
+#
+#      chr start   win_key
+# 1:  Chr4  7201 Chr4.7201
+# 2:  Chr4  7202 Chr4.7201
+# ...
+# 99: Chr4  7300 Chr4.7201
+############################################################################
+win_ranges=getData(filtered_diff_table)[,1:3];
+win_coord_seq=as.vector(apply(win_ranges, 1, function(x) x[2]:x[3]));
+win_chr_rep=as.vector(apply(win_ranges, 1, function(x) rep(x[1], (as.integer(x[3])-as.integer(x[2])+1))));
+win_winstart_rep=as.vector(apply(win_ranges, 1, function(x) rep(x[2], (as.integer(x[3])-as.integer(x[2])+1))));
+win_key_rep=paste(win_chr_rep, gsub(" ", "", win_winstart_rep), sep=".");
+allowed_coord_df=data.frame(win_key=win_key_rep, chr=win_chr_rep, start=win_coord_seq);
+allowed_coord=data.table(allowed_coord_df, key=c("chr", "start"));
+
+############################################################################
+# DETERMINE THE LIST OF RETAINED WINDOWS KEYS (<chr>.<start>)
+############################################################################
+win_key_list=paste(win_ranges[,1], win_ranges[,2], sep=".");
+nW=length(win_key_list);
+win_key_list=data.table(win_key = win_key_list, key="win_key");
+
+############################################################################
+# FOR EACH METHOBJECT, RETAIN ONLY CYTOSINES THAT FALL INTO RETAINED WINDOWS
+# AND COUNT THEM
+############################################################################
+# This is achieved by retaining only cytosines whose coordinates 
+# (chr, start) match the list of allowed coordinates for each sample
+#
+# NB : Working with data.tables is the fastest way to proceed in R
+# cur_filtered_object example:
+#     id_vector  chr start   end strand coverage numCs numTs    win_key
+#  1:         1 Chr1 56380 56380      +       26    26     0 Chr1.56301
+#
+# A second step of the loop consists in counting the nb of retained 
+# cytosines within each window. A left outer join is performed between the 
+# list of retained windows and the count of cytosines per windows in order 
+# to assign a count of "0" for the windows that are potentially empty of
+# cytosines in a given sample.
+
+# The process is repeated with an object storing only cytosines present
+# in all samples. Common cytosines are retrieved thanks to the function 
+# "unite" 
+############################################################################
+all_cyt_count_table=data.table(matrix(0, nW, (nA+nB+1)));
+for(i in 1:(nA+nB)) {
+	cur_filtered_object <- data.table(merge(allowed_coord, data.table(getData(meth_objects[[i]]), key=c("chr", "start"))));
+	setkey(cur_filtered_object, win_key);
+	cur_covered_cyt_count_table <- cur_filtered_object[, .N, keyby="win_key"];
+	# Outter join to assign "0" to potentially non covered windows in the given sample i:
+	all_cyt_count_table[,i] <- cur_covered_cyt_count_table[win_key_list, on="win_key"]$N;
+}
+common_cyt_object <- data.table(merge(allowed_coord, data.table(getData(unite(meth_objects)), key=c("chr", "start"))));
+common_cyt_count <- common_cyt_object[, .N, by="win_key"];
+all_cyt_count_table[,(i+1)] <- common_cyt_count[win_key_list, on="win_key"]$N;
+
+#############################################################################
+# RENAME THE COLUMNS BY THE NAME OF THE SAMPLE TO WHICH THEY BELONG
+#############################################################################
+columns_A=NULL; columns_B=NULL;
+for (i in 1:nA) {
+	columns_A=c(columns_A, paste("nb_Cs_A", i, sep=""))
+}
+for (i in 1:nB) {
+	columns_B=c(columns_B, paste("nb_Cs_B", i, sep=""))
+}
+names(all_cyt_count_table)[1:nA]=columns_A;
+names(all_cyt_count_table)[(nA+1):(nA+nB)]=columns_B;
+names(all_cyt_count_table)[(nA+nB+1)]="nb_Cs_inCommon";
+
 #############################################################################
 # WRITE THE RESULTING OUTPUT TABLE
 #############################################################################
 prefix=paste(opt$name_group_A, opt$name_group_B, sep="_vs_");
 if( !is.null(opt$win_report) ) {
-	merged_table <- merge(getData(filtered_diff_table), getData(meth_table), 
-		by.x=c("chr", "start", "end"), by.y=c("chr", "start", "end"));
-	merged_table <- subset(merged_table, select=-c(strand.x, strand.y)); ## remove these two columns
+	merged_table <- data.table(merge(getData(filtered_diff_table), getData(meth_table), 
+		by.x=c("chr", "start", "end"), by.y=c("chr", "start", "end"), sort=FALSE));
+	merged_table[, c("strand.x", "strand.y") := NULL]; ## drop these two columns
+	merged_table = data.table(cbind(merged_table, all_cyt_count_table))
+	print(merged_table)
 	write.table(merged_table, opt$win_report, 
 		quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE);
 }
@@ -169,6 +270,7 @@ if( !is.null(opt$win_report) ) {
 #############################################################################
 if( !is.null(opt$plot) ) {
 	pdf(opt$plot, width=12, height=8);
+
 #############################################################################
 # Determine the sample code of each meth_objects, (ie sampleA1, A2...)
 #############################################################################
@@ -181,6 +283,7 @@ if( !is.null(opt$plot) ) {
 		samplecode.list[nA+i]=paste("sampleB", i, sep=""); 
 		color.list[nA+i]="lightsalmon3";
 	}
+
 #############################################################################
 # For each meth_objects, plot the distribution of coverages
 #############################################################################
@@ -281,6 +384,7 @@ if( !is.null(opt$plot) ) {
 	if( !is.null(opt$plot_cor) ) {
 		getCorrelation(meth_table, plot=TRUE);
 	}
+
 #############################################################################
 # Plot PCA 
 #############################################################################$
