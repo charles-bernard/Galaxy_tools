@@ -1,15 +1,14 @@
 #!/usr/bin/awk
 
 # FUNCTION:
-## Identify differentially methylated regions from a list of differentially methylated regions: 
-## <chr> <base> <end> <pvalue> <qvalue> <meth.diff> [<tot_cov> <cov_Cs> <cov_Ts>]{n} <nb_Cs>{n} <nb_Cs_inCommon>
+## Identify differentially methylated regions from a list of differentially methylated rwindows: 
 ## <chr> <base> <end> <meth.diff> <minPooledCov> <minCytCount> <ratio_commonCytCount_maxCytCount>
 ##
 ## dmr file:
-## <chr> <start> <end> <meth_diff> <nb_Cs_inCommon> <max_nb_Cs/nb_Cs_inCommon>
+## <chr> <start> <end> <meth_diff> <minCytCount> <max_nb_Cs/nb_Cs_inCommon>
 ##
 ## While Filtering every window which do not satisifies the conditions:
-## 	- minimum coverage
+##  - minimum coverage
 ##  - min nb of cytosines of a given context
 ##  - min ratio max nb cytosine / nb common cytosines
 
