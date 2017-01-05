@@ -1,0 +1,5 @@
+chr	start	end	meth.diff	minPooledCov.tot_cov_A	minCytCount	ratio_commonCytCount_maxCytCount
+Chr3	115801	115900	-56.7861885790173	15	2	0.5
+Chr3	115901	116000	-54	10	2	0.4      
+Chr4	7201	7300	-43.4406215316315	85	1	0.5
+Chr4	111601	111700	-63.0597014925373	8	2	0.5

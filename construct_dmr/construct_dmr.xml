@@ -1,0 +1,183 @@
+<tool id="construct_dmr" name="Construct DMR" version="0.0.1">
+
+  <description>Infer Differentially Methylated Regions from Differentially Methylated Windows</description>
+
+  <command interpreter="python">
+<![CDATA[
+    construct_dmr_wrapper.py 
+
+    --tool_dir "$__tool_directory__"
+    --name "$name"
+
+    --analysis_type $analysis_type.analysis_type_selector
+
+    #if str ( $analysis_type.analysis_type_selector ) == "context_dependent"
+
+      --infile_CG "$analysis_type.CG_diff_report"
+      --infile_CHG "$analysis_type.CHG_diff_report"
+      --infile_CHH "$analysis_type.CHH_diff_report"
+
+      --min_C_CG $analysis_type.min_C_CG
+      --min_C_CHG $analysis_type.min_C_CHG
+      --min_C_CHH $analysis_type.min_C_CHH
+
+      --hypo_dmr_CG "$hypo_dmr_CG"
+      --hypo_dmr_CG_fig "$hypo_dmr_CG_fig"
+      --hypo_dmr_CG_gff "$hypo_dmr_CG_gff"
+      --hyper_dmr_CG "$hyper_dmr_CG"
+      --hyper_dmr_CG_fig "$hyper_dmr_CG_fig"
+      --hyper_dmr_CG_gff "$hyper_dmr_CG_gff"
+
+      --hypo_dmr_CHG "$hypo_dmr_CHG"
+      --hypo_dmr_CHG_fig "$hypo_dmr_CHG_fig"
+      --hypo_dmr_CHG_gff "$hypo_dmr_CHG_gff"
+      --hyper_dmr_CHG "$hyper_dmr_CHG"
+      --hyper_dmr_CHG_fig "$hyper_dmr_CHG_fig"
+      --hyper_dmr_CHG_gff "$hyper_dmr_CHG_gff"
+
+      --hypo_dmr_CHH "$hypo_dmr_CHH"
+      --hypo_dmr_CHH_fig "$hypo_dmr_CHH_fig"
+      --hypo_dmr_CHH_gff "$hypo_dmr_CHH_gff"
+      --hyper_dmr_CHH "$hyper_dmr_CHH"
+      --hyper_dmr_CHH_fig "$hyper_dmr_CHH_fig"
+      --hyper_dmr_CHH_gff "$hyper_dmr_CHH_gff"
+
+    #else
+
+      --infile_allC "$analysis_type.allC_diff_report" 
+
+      --min_C_allC $analysis_type.min_allC  
+
+      --hypo_dmr_C "$hypo_dmr_C"
+      --hypo_dmr_C_fig "$hypo_dmr_C_fig"
+      --hypo_dmr_C_gff "$hypo_dmr_C_gff"
+      --hyper_dmr_C "$hyper_dmr_C"
+      --hyper_dmr_C_fig "$hyper_dmr_C_fig"
+      --hyper_dmr_C_gff "$hyper_dmr_C_gff"
+
+    #end if
+
+    --min_cov $min_cov
+    --common_C_ratio $common_C_ratio
+    --n_gap $n_gap
+
+    --cmd_report $cmd_report
+    --log_report $log_report
+]]>
+  </command>
+  <inputs>
+    <param name="name" value="my_diff_analysis" type="text" size="20" label="Name of your differential analsysis">
+      <validator type="empty_field" message="Please, specify a name for the methylation profile A."/>
+    </param>
+    <conditional name="analysis_type">
+      <param name="analysis_type_selector" type="select" label="Choose the type of DMR to identify">
+        <option value="context_dependent" selected="true">Context Dependent DMR</option>
+        <option value="context_independent">Context Independent DMR</option>
+      </param>
+      <when value="context_dependent">
+        <param name="CG_diff_report" type="data" label="Submit methylKit output for CG context" />
+        <param name="CHG_diff_report" type="data" label="Submit methylKit output for CHG context" />
+        <param name="CHH_diff_report" type="data" label="Submit methylKit output for CHH context" />
+        <param name="min_C_CG" type="integer" value="3" label="Minimum number of cytosines in CG context recquired to retain a differentially methylated window" />
+        <param name="min_C_CHG" type="integer" value="3" label="Minimum number of cytosines in CHG context recquired to retain a differentially methylated window" />
+        <param name="min_C_CHH" type="integer" value="4" label="Minimum number of cytosines in CHH context recquired to retain a differentially methylated window" />
+      </when>
+      <when value="context_independent">
+        <param name="allC_diff_report" type="data" label="Submit context independent methylKit output" />
+        <param name="min_allC" type="integer" value="6" label="Minimum number of cytosines recquired to retain a differentially methylated window" />
+      </when>
+    </conditional>
+    <param name="min_cov" type="integer" value="10" label="Minimum coverage for a window to be retained" />
+    <param name="common_C_ratio" type="float" value="0.0" label="Minimum ratio allowed between nb of common cytosines among all samples per window AND max nb of cytosines per window among all samples" />
+    <param name="n_gap" type="integer" value="1" label="Nb of gap (in window size) tolerated between nearby windows to construct DMR?" />
+  </inputs>
+
+  <outputs>
+    <data name="cmd_report" format="txt" label="${tool.name} on ${on_string}: Commands Report"/>
+    <data name="log_report" format="txt" label="${tool.name} on ${on_string}: Log Report"/>
+    <data name="hypo_dmr_C" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs report (all C)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_independent' </filter>
+    </data>
+    <data name="hypo_dmr_C_fig" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs report for figure and annotation (all C)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_independent' </filter>
+    </data>
+    <data name="hypo_dmr_C_gff" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs gff (all C)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_independent' </filter>
+    </data>
+    <data name="hyper_dmr_C" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs report (all C)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_independent' </filter>
+    </data>
+    <data name="hyper_dmr_C_fig" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs report for figure and annotation (all C)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_independent' </filter>
+    </data>
+    <data name="hyper_dmr_C_gff" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs gff (all C)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_independent' </filter>
+    </data>
+    <data name="hypo_dmr_CG" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs report (CG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hypo_dmr_CG_fig" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs report for figure and annotation (CG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hypo_dmr_CG_gff" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs gff (CG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hyper_dmr_CG" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs report (CG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hyper_dmr_CG_fig" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs report for figure and annotation (CG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hyper_dmr_CG_gff" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs gff (CG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hypo_dmr_CHG" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs report (CHG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hypo_dmr_CHG_fig" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs report for figure and annotation (CHG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hypo_dmr_CHG_gff" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs gff (CHG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hyper_dmr_CHG" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs report (CHG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hyper_dmr_CHG_fig" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs report for figure and annotation (CHG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hyper_dmr_CHG_gff" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs gff (CHG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hypo_dmr_CHH" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs report (CHG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hypo_dmr_CHH_fig" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs report for figure and annotation (CHH)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hypo_dmr_CHH_gff" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs gff (CHG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hyper_dmr_CHH" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs report (CHH)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hyper_dmr_CHH_fig" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs report for figure and annotation (CHH)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="hyper_dmr_CHH_gff" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs gff (CHH)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+  </outputs>
+
+  <tests></tests>
+
+  <help>
+<![CDATA[
+
+**What it does**
+
+  | This tool takes as inputs methylkit reports on hypo and hyper methylated genomic windows in order to join nearby windows into DMRs (Differentially Methylated Regions)
+
+]]>
+  </help>
+</tool>
