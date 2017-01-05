@@ -17,9 +17,9 @@
 ## -f join_dmw_into_dmr.awk statistic_file
 
 # ARGS TAKEN:
-## win              win_size
+
 ## min_C            recquired nb of cytosines
-## min_cov			min coverage recquired for a window to be retained
+## min_cov	    min coverage recquired for a window to be retained
 ## min_ratio        ratio recquired
 
 # HIERARCHY OF CONTEXTS:
