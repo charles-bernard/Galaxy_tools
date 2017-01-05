@@ -11,7 +11,7 @@ library(optparse);
 library(plyr); 
 library(methylKit); 
 library(data.table)
-library(tictoc)
+# library(tictoc)
 
 #############################################################################
 # READ THE OPTIONS 
@@ -124,6 +124,19 @@ if( opt$pool == "True" ) {
 #############################################################################
 # RENAME THE COLUMNS BY THE NAME OF THE SAMPLE TO WHICH THEY BELONG
 #############################################################################
+# if( opt$pool == "True" ) {
+# 	names(meth_table)[5:10]=c("coverageA", "numCsA", "numTsA", "coverageB", "numCsB", "numTsB");
+# } else {
+# 	columns_A=NULL; columns_B=NULL;
+# 	for (i in 1:nA) {
+# 		columns_A=c(columns_A, c(paste("coverageA", i, sep=""), paste("numCsA", i, sep=""), paste("numTsA", i, sep="")));
+# 	}
+# 	for (i in 1:nB) {
+# 		columns_B=c(columns_B, c(paste("coverageB", i, sep=""), paste("numCsB", i, sep=""), paste("numTsB", i, sep="")));
+# 	}
+# 	names(meth_table)[5:(5+3*nA-1)]=columns_A;
+# 	names(meth_table)[(5+3*nA):(5+3*nA+3*nB-1)]=columns_B;
+# }
 if( opt$pool == "True" ) {
 	names(meth_table)[5:10]=c("tot_cov_A", "cov_Cs_A", "cov_Ts_A", "tot_cov_B", "cov_Cs_B", "cov_Ts_B");
 } else {
@@ -246,8 +259,8 @@ if( !is.null(opt$win_report) ) {
 	merged_table <- data.table(merge(getData(filtered_diff_table), getData(meth_table), 
 		by.x=c("chr", "start", "end"), by.y=c("chr", "start", "end"), sort=FALSE));
 	merged_table[, c("strand.x", "strand.y") := NULL]; ## drop these two columns
-	merged_table <- data.table(cbind(merged_table, all_cyt_count_table))
-	write.table(merged_table, opt$win_report, 
+	merged_table = data.table(cbind(merged_table, all_cyt_count_table))
+	fwrite(merged_table, opt$win_report, 
 		quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE);
 }
 
