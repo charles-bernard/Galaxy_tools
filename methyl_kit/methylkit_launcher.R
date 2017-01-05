@@ -353,12 +353,12 @@ if( !is.null(opt$plot) ) {
 		legend("right", legend=c("all windows", "retained hypo windows", "retained hyper windows"), 
 			fill=c("gray85", "lightblue1", "lightcoral"), cex=0.8);
 		
-		hypo_hist_info <- hist(hypo_diff, plot=FALSE, breaks=seq(-50,50,1));
+		hypo_hist_info <- hist(hypo_diff, plot=FALSE, breaks=seq(-100,100,1));
 		lines(hypo_hist_info, 
 			main=NA,
 			col="lightblue1");
 
-		hyper_hist_info <- hist(hyper_diff, plot=FALSE, breaks=seq(-50,50,1));
+		hyper_hist_info <- hist(hyper_diff, plot=FALSE, breaks=seq(-100,100,1));
 		lines(hyper_hist_info, 
 			main=NA,
 			col="lightcoral");
