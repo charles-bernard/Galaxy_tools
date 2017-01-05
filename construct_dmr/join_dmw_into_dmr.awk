@@ -22,10 +22,6 @@
 ## min_cov	    min coverage recquired for a window to be retained
 ## min_ratio        ratio recquired
 
-# HIERARCHY OF CONTEXTS:
-## 1  2   3   4
-## CG CHG CHH all_C
-
 BEGIN {
 
 	FS = "\t";
