@@ -1,1 +1,0 @@
-Rscript --verbose generate_data_for_filtering.R --infile CG.tabular --context CG --nA 2 --nB 2 --pool True
