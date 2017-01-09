@@ -1,0 +1,94 @@
+<tool id="plot_dmr" name="Plot DMR" version="0.0.1">
+
+  <description>Plot the location of the hypo and hyper DMRs on the different chromosomes</description>
+
+  <command interpreter="python">
+<![CDATA[
+    plot_dmr_wrapper.py 
+
+    --tool_dir "$__tool_directory__"
+    --name "$name"
+
+    --chr_len "$chr_len.fields.path"
+
+    --analysis_type $analysis_type.analysis_type_selector
+
+    #if str ( $analysis_type.analysis_type_selector ) == "context_dependent"
+
+      --hypo_dmr_CG "$hypo_dmr_CG"
+      --hyper_dmr_CG "$hyper_dmr_CG"
+
+      --hypo_dmr_CHG "$hypo_dmr_CHG"
+      --hyper_dmr_CHG "$hyper_dmr_CHG"
+ 
+      --hypo_dmr_CHH "$hypo_dmr_CHH"
+      --hyper_dmr_CHH "$hyper_dmr_CHH"
+
+      --plot_CG "$plot_CG"
+
+      --plot_CHG "$plot_CHG"
+
+      --plot_CHH "$plot_CHH"
+
+    #else
+
+      --hypo_dmr_allC "$hypo_dmr_C"
+      --hyper_dmr_allC "$hyper_dmr_C"
+
+      --plot_allC "$plot_allC"
+
+    #end if
+
+    --cmd_report "$cmd_report"
+]]>
+  </command>
+  <inputs>
+    <param name="name" value="A_vs_B" type="text" size="20" label="Name of your differential analysis">
+      <validator type="empty_field" message="Please, specify a name for the methylation profile A."/>
+    </param>
+    <conditional name="analysis_type">
+      <param name="analysis_type_selector" type="select" label="Choose the type of DMR to identify">
+        <option value="context_dependent" selected="true">Context Dependent DMR</option>
+        <option value="context_independent">Context Independent DMR</option>
+      </param>
+      <when value="context_dependent">
+        <param name="hypo_dmr_CG" type="data" label="Submit Hypo DMRs (for figure and annotation) in CG context" />
+        <param name="hyper_dmr_CG" type="data" label="Submit Hyper DMRs (for figure and annotation) in CG context" />
+        <param name="hypo_dmr_CHG" type="data" label="Submit Hypo DMRs (for figure and annotation) in CHG context" />
+        <param name="hyper_dmr_CHG" type="data" label="Submit Hyper DMRs (for figure and annotation) in CHG context" />
+        <param name="hypo_dmr_CHH" type="data" label="Submit Hypo DMRs (for figure and annotation) in CHH context" />
+        <param name="hyper_dmr_CHH" type="data" label="Submit Hyper DMRs (for figure and annotation) in CHH context" />   
+      </when>
+      <when value="context_independent">
+        <param name="hypo_dmr_allC" type="data" label="Submit context-independent Hypo DMRs (for figure and annotation)" />
+        <param name="hyper_dmr_allC" type="data" label="Submit context-independent Hyper DMRs (for figure and annotation)" />
+      </when>
+    </conditional>
+    <param name="chr_len" type="select" label="Select Reference Genome" help="If your genome of interest is not listed, contact your Galaxy admin">
+      <options from_data_table="igv_genomes_chr_sizes">
+        <filter type="sort_by" column="name"/>
+        <validator type="no_options" message="No indexes are available for the selected input dataset"/>
+      </options>
+    </param>
+  </inputs>
+
+  <outputs>
+    <data name="cmd_report" format="txt" label="${tool.name} on ${on_string}: Command Report"/> 
+    <data name="plot_allC" format="jpg" label="${tool.name} on ${on_string}: Context-Independent DMRs Plot">
+      <filter> analysis_type['analysis_type_selector'] == 'context_independent' </filter>
+    </data>
+    <data name="plot_CG" format="jpg" label="${tool.name} on ${on_string}: DMRs Plot (CG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="plot_CHG" format="jpg" label="${tool.name} on ${on_string}: DMRs Plot (CHG)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+    <data name="plot_CHH" format="jpg" label="${tool.name} on ${on_string}: DMRs Plot (CHH)">
+      <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
+    </data>
+  </outputs>
+
+  <tests></tests>
+
+  <help></help>
+</tool>
