@@ -66,7 +66,7 @@
 ]]>
   </command>
   <inputs>
-    <param name="name" value="my_diff_analysis" type="text" size="20" label="Name of your differential analsysis">
+    <param name="name" value="A_vs_B" type="text" size="20" label="Name of your differential analsysis">
       <validator type="empty_field" message="Please, specify a name for the methylation profile A."/>
     </param>
     <conditional name="analysis_type">
@@ -161,7 +161,7 @@
     <data name="hyper_dmr_CHH" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs report (CHH)">
       <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
     </data>
-    <data name="hyper_dmr_CHH_fig" format="tabular" label="${tool.name} on ${on_string}: Hypo DMRs report for figure and annotation (CHH)">
+    <data name="hyper_dmr_CHH_fig" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs report for figure and annotation (CHH)">
       <filter> analysis_type['analysis_type_selector'] == 'context_dependent' </filter>
     </data>
     <data name="hyper_dmr_CHH_gff" format="tabular" label="${tool.name} on ${on_string}: Hyper DMRs gff (CHH)">
