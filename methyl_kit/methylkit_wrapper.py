@@ -59,7 +59,7 @@ def convert_Creport_to_methkit(awk_cmd, infilename, logger):
     return
 
 def launch_methylkit(methylkit_cmd, context, logger):
-    methylkit_result = subprocess.Popen(args=methylkit_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    methylkit_result = subprocess.Popen(args=methylkit_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     methylkit_out, methylkit_err = methylkit_result.communicate()
     if methylkit_out:
         logger.info("Running methylkit on %s context produced the additional output:\n"
@@ -316,6 +316,10 @@ def __main__():
     """
     PREPARE nContext METHYLKIT LAUNCHER COMMAND
     """
+    # Amira settings (uncomment if desired):
+    # parallel = False
+    # methkit_threads = opt.n_threads
+
     methylkit_script = os.path.join(opt.tool_dir, 'methylkit_launcher.R')
     methylkit_cmd = [''] * nContext
     for c in range(0, nContext):
@@ -340,6 +344,7 @@ def __main__():
     """
     LAUNCH EACH METHYLKIT COMMAND
     """
+
     # Conversion is heavy, so we proceed to parallel processing
     diff_analysis_tasks = [['', '', '']] * nContext
     for c in range(0, nContext):
