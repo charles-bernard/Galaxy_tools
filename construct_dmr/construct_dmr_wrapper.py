@@ -4,7 +4,6 @@ import logging
 import multiprocessing
 from optparse import OptionParser
 import os
-from PyPDF2 import PdfFileReader, PdfFileMerger
 import re
 import shutil
 import subprocess
