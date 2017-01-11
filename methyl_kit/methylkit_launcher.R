@@ -13,6 +13,7 @@ library(methylKit);
 library(data.table)
 # library(tictoc)
 
+
 #############################################################################
 # READ THE OPTIONS 
 #############################################################################
@@ -124,6 +125,19 @@ if( opt$pool == "True" ) {
 #############################################################################
 # RENAME THE COLUMNS BY THE NAME OF THE SAMPLE TO WHICH THEY BELONG
 #############################################################################
+# if( opt$pool == "True" ) {
+# 	names(meth_table)[5:10]=c("coverageA", "numCsA", "numTsA", "coverageB", "numCsB", "numTsB");
+# } else {
+# 	columns_A=NULL; columns_B=NULL;
+# 	for (i in 1:nA) {
+# 		columns_A=c(columns_A, c(paste("coverageA", i, sep=""), paste("numCsA", i, sep=""), paste("numTsA", i, sep="")));
+# 	}
+# 	for (i in 1:nB) {
+# 		columns_B=c(columns_B, c(paste("coverageB", i, sep=""), paste("numCsB", i, sep=""), paste("numTsB", i, sep="")));
+# 	}
+# 	names(meth_table)[5:(5+3*nA-1)]=columns_A;
+# 	names(meth_table)[(5+3*nA):(5+3*nA+3*nB-1)]=columns_B;
+# }
 if( opt$pool == "True" ) {
 	names(meth_table)[5:10]=c("tot_cov_A", "cov_Cs_A", "cov_Ts_A", "tot_cov_B", "cov_Cs_B", "cov_Ts_B");
 } else {
@@ -212,7 +226,7 @@ win_key_list=data.table(win_key = win_key_list, key="win_key");
 # in all samples. Common cytosines are retrieved thanks to the function 
 # "unite" 
 ############################################################################
-all_cyt_count_table=data.table(matrix(0, nW, (nA+nB+1)));
+all_cyt_count_table=data.table(matrix(0, nW, (nA+nB+2)));
 for(i in 1:(nA+nB)) {
 	cur_filtered_object <- data.table(merge(allowed_coord, data.table(getData(meth_objects[[i]]), key=c("chr", "start"))));
 	setkey(cur_filtered_object, win_key);
@@ -223,6 +237,7 @@ for(i in 1:(nA+nB)) {
 common_cyt_object <- data.table(merge(allowed_coord, data.table(getData(unite(meth_objects)), key=c("chr", "start"))));
 common_cyt_count <- common_cyt_object[, .N, by="win_key"];
 all_cyt_count_table[,(i+1)] <- common_cyt_count[win_key_list, on="win_key"]$N;
+all_cyt_count_table=data.table(cbind(all_cyt_count_table, win_key_list));
 
 #############################################################################
 # RENAME THE COLUMNS BY THE NAME OF THE SAMPLE TO WHICH THEY BELONG
@@ -246,7 +261,9 @@ if( !is.null(opt$win_report) ) {
 	merged_table <- data.table(merge(getData(filtered_diff_table), getData(meth_table), 
 		by.x=c("chr", "start", "end"), by.y=c("chr", "start", "end"), sort=FALSE));
 	merged_table[, c("strand.x", "strand.y") := NULL]; ## drop these two columns
-	merged_table = data.table(cbind(merged_table, all_cyt_count_table))
+	win_key_list_in_good_order = paste(merged_table$chr, ".", merged_table$start, sep="");
+	final_cyt_count_table=all_cyt_count_table[win_key_list_in_good_order, on="win_key"]
+	merged_table = data.table(cbind(merged_table, final_cyt_count_table[,1:(nA+nB+1)]))
 	fwrite(merged_table, opt$win_report, 
 		quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE);
 }
