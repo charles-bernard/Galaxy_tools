@@ -263,8 +263,8 @@ if( !is.null(opt$win_report) ) {
 	merged_table[, c("strand.x", "strand.y") := NULL]; ## drop these two columns
 	win_key_list_in_good_order = paste(merged_table$chr, ".", merged_table$start, sep="");
 	final_cyt_count_table=all_cyt_count_table[win_key_list_in_good_order, on="win_key"]
-	merged_table = data.table(cbind(merged_table, final_cyt_count_table[,1:(nA+nB+1)]))
-	fwrite(merged_table, opt$win_report, 
+	final_table = data.table(cbind(merged_table, final_cyt_count_table[,1:(nA+nB+1)]))
+	fwrite(final_table, opt$win_report, 
 		quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE);
 }
 
