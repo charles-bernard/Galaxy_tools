@@ -230,8 +230,8 @@ def main():
     print("NAME:\t%s" % data_table_entry['name'])
     print("PREFIX:\t%s" % data_table_entry['prefix'])
 
-    shutil.copyfile(stranded_index_name, os.path.join(target_directory, stranded_index_name))
-    shutil.copyfile(unstranded_index_name, os.path.join(target_directory, unstranded_index_name))
+    shutil.move(stranded_index_name, os.path.join(target_directory, stranded_index_name))
+    shutil.move(unstranded_index_name, os.path.join(target_directory, unstranded_index_name))
 
     cleanup_before_exit(tmp_dir)
 
