@@ -187,9 +187,8 @@ allowed_coord=data.table(allowed_coord_df, key=c("chr", "start"));
 ############################################################################
 # DETERMINE THE LIST OF RETAINED WINDOWS KEYS (<chr>.<start>)
 ############################################################################
-win_key_list=paste(win_ranges[,1], win_ranges[,2], sep=".");
-nW=length(win_key_list);
-win_key_list=data.table(win_key = win_key_list, key="win_key");
+win_key=paste(win_ranges[,1], win_ranges[,2], sep=".");
+nW=length(win_key);
 
 ############################################################################
 # FOR EACH METHOBJECT, RETAIN ONLY CYTOSINES THAT FALL INTO RETAINED WINDOWS
@@ -213,18 +212,18 @@ win_key_list=data.table(win_key = win_key_list, key="win_key");
 # in all samples. Common cytosines are retrieved thanks to the function 
 # "unite" 
 ############################################################################
-all_cyt_count_table=data.table(matrix(0, nW, (nA+nB+2)));
+all_cyt_count_table=data.table(matrix(0, nW, (nA+nB+1)));
 for(i in 1:(nA+nB)) {
 	cur_filtered_object <- data.table(merge(allowed_coord, data.table(getData(meth_objects[[i]]), key=c("chr", "start"))));
 	setkey(cur_filtered_object, win_key);
 	cur_covered_cyt_count_table <- cur_filtered_object[, .N, keyby="win_key"];
 	# Outter join to assign "0" to potentially non covered windows in the given sample i:
-	all_cyt_count_table[,i] <- cur_covered_cyt_count_table[win_key_list, on="win_key"]$N;
+	all_cyt_count_table[,i] <- cur_covered_cyt_count_table[win_key, on="win_key"]$N;
 }
 common_cyt_object <- data.table(merge(allowed_coord, data.table(getData(unite(meth_objects)), key=c("chr", "start"))));
 common_cyt_count <- common_cyt_object[, .N, by="win_key"];
-all_cyt_count_table[,(i+1)] <- common_cyt_count[win_key_list, on="win_key"]$N;
-all_cyt_count_table=data.table(cbind(all_cyt_count_table, win_key_list));
+all_cyt_count_table[,(i+1)] <- common_cyt_count[win_key, on="win_key"]$N;
+all_cyt_count_table[is.na(all_cyt_count_table)] <- 0
 
 #############################################################################
 # RENAME THE COLUMNS BY THE NAME OF THE SAMPLE TO WHICH THEY BELONG
@@ -248,9 +247,7 @@ if( !is.null(opt$win_report) ) {
 	merged_table <- data.table(merge(getData(filtered_diff_table), getData(meth_table), 
 		by.x=c("chr", "start", "end"), by.y=c("chr", "start", "end"), sort=FALSE));
 	merged_table[, c("strand.x", "strand.y") := NULL]; ## drop these two columns
-	win_key_list_in_good_order = paste(merged_table$chr, ".", merged_table$start, sep="");
-	final_cyt_count_table=all_cyt_count_table[win_key_list_in_good_order, on="win_key"]
-	final_table = data.table(cbind(merged_table, final_cyt_count_table[,1:(nA+nB+1)]))
+	final_table = data.table(cbind(merged_table, all_cyt_count_table[,1:(nA+nB+1)]))
 	fwrite(final_table, opt$win_report, 
 		quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE);
 }
