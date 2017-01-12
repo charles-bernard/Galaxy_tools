@@ -323,7 +323,7 @@ def __main__():
     methylkit_script = os.path.join(opt.tool_dir, 'methylkit_launcher.R')
     methylkit_cmd = [''] * nContext
     for c in range(0, nContext):
-        methylkit_cmd[c] = ("Rscript --verbose \"%s\" --n_threads %d "
+        methylkit_cmd[c] = ("Rscript \"%s\" --n_threads %d "
                         "--name_group_A \"%s\" --files_A \"%s\" --ids_A \"%s\" "
                         "--name_group_B \"%s\" --files_B \"%s\" --ids_B \"%s\" "
                         "--context %s --diff %d --qv %.3f --win %d --norm %s --pool %s --out_dir \"%s\" " \
