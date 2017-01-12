@@ -33,8 +33,7 @@ opt=parse_args(OptionParser(option_list=option_list));
 input_table=fread(opt$input_file, header=TRUE, sep="\t");
 
 #############################################################################
-# DETERMINE THE INDEXES FOR A|B TOT COVERAGES, POOL IF NECESSARY AND 
-# EXTRACT THE MINIMUM POOLED COVERAGE
+# DETERMINE THE INDEXES FOR A|B TOT COVERAGES, EXTRACT THE MINIMUM COVERAGE
 #############################################################################
 if (opt$pool == "True") {
 	pooled_cov_A = input_table[,7];
