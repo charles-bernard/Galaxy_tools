@@ -187,7 +187,7 @@ allowed_coord=data.table(allowed_coord_df, key=c("chr", "start"));
 ############################################################################
 # DETERMINE THE LIST OF RETAINED WINDOWS KEYS (<chr>.<start>)
 ############################################################################
-win_key=paste(win_ranges[,1], win_ranges[,2], sep=".");
+win_key=as.factor(paste(win_ranges[,1], win_ranges[,2], sep="."));
 nW=length(win_key);
 win_key=data.table(win_key);
 
