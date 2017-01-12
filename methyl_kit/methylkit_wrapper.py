@@ -59,7 +59,7 @@ def convert_Creport_to_methkit(awk_cmd, infilename, logger):
     return
 
 def launch_methylkit(methylkit_cmd, context, logger):
-    methylkit_result = subprocess.Popen(args=methylkit_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    methylkit_result = subprocess.Popen(args=methylkit_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     methylkit_out, methylkit_err = methylkit_result.communicate()
     if methylkit_out:
         logger.info("Running methylkit on %s context produced the additional output:\n"
