@@ -76,7 +76,5 @@ statistics_table = data.table(input_table[,c(1,2,3,6)],
 	minCytCount=min_cyt_count, 
 	ratio_commonCytCount_maxCytCount=ratio);
 
-print(statistics_table)
-
 fwrite(statistics_table, opt$output_file, 
  	quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE);
