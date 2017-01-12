@@ -189,6 +189,7 @@ allowed_coord=data.table(allowed_coord_df, key=c("chr", "start"));
 ############################################################################
 win_key=paste(win_ranges[,1], win_ranges[,2], sep=".");
 nW=length(win_key);
+win_key=data.table(win_key);
 
 ############################################################################
 # FOR EACH METHOBJECT, RETAIN ONLY CYTOSINES THAT FALL INTO RETAINED WINDOWS
