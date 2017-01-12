@@ -248,7 +248,7 @@ if( !is.null(opt$win_report) ) {
 	merged_table <- data.table(merge(getData(filtered_diff_table), getData(meth_table), 
 		by.x=c("chr", "start", "end"), by.y=c("chr", "start", "end"), sort=FALSE));
 	merged_table[, c("strand.x", "strand.y") := NULL]; ## drop these two columns
-	final_table = data.table(cbind(merged_table, all_cyt_count_table[,1:(nA+nB+1)]))
+	final_table = data.table(cbind(merged_table, all_cyt_count_table))
 	write.table(final_table, opt$win_report, 
 		quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE);
 	# If you can, I STRONGLY ADVICE YOU!!! to use the FWRITE FUNCTION rather than WRITE.TABLE:
