@@ -39,6 +39,7 @@ input_table=fread(opt$input_file, header=TRUE, sep="\t");
 if (opt$pool == "True") {
 	pooled_cov_A = input_table[,7];
 	pooled_cov_B = input_table[,10];
+	cov_mat = matrix(c(pooled_cov_A, pooled_cov_B, nrow=length(pooled_cov_A), ncol=2));
 } else {
 	index_cov_A = NULL;
 	index_cov_B = NULL;
@@ -52,11 +53,9 @@ if (opt$pool == "True") {
 	}
 	cov_A_mat = as.matrix(input_table[,index_cov_A, with=FALSE]);
 	cov_B_mat = as.matrix(input_table[,index_cov_B, with=FALSE]);
-	pooled_cov_A = rowSums(cov_A_mat, na.rm=TRUE);
-	pooled_cov_B = rowSums(cov_B_mat, na.rm=TRUE);
+	cov_mat = cbind(cov_A_mat, cov_B_mat);
 }
-min_pooled_cov = pmin(pooled_cov_A, pooled_cov_B, na.rm=TRUE);
-colnames(min_pooled_cov) <- "minPooledCov"
+min_cov = rowMins(cov_mat);
 
 #############################################################################
 # DETERMINE THE INDEXES FOR THE CYTOSINE COUNTS, COMPUTE THE RATIO 
@@ -73,9 +72,11 @@ ratio = cyt_count_mat[,last] / rowMaxs(cyt_count_mat);
 # CREATE THE STATISTICS TABLE
 #############################################################################
 statistics_table = data.table(input_table[,c(1,2,3,6)], 
-	min_pooled_cov, 
+	min_cov=min_cov, 
 	minCytCount=min_cyt_count, 
 	ratio_commonCytCount_maxCytCount=ratio);
+
+print(statistics_table)
 
 fwrite(statistics_table, opt$output_file, 
  	quote=FALSE, sep="\t", row.names=FALSE, col.names=TRUE);
