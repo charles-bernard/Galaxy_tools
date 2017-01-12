@@ -317,8 +317,8 @@ def __main__():
     PREPARE nContext METHYLKIT LAUNCHER COMMAND
     """
     # Amira settings (uncomment if desired):
-    # parallel = False
-    # methkit_threads = opt.n_threads
+    parallel = False
+    methkit_threads = opt.n_threads
 
     methylkit_script = os.path.join(opt.tool_dir, 'methylkit_launcher.R')
     methylkit_cmd = [''] * nContext
