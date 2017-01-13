@@ -61,20 +61,19 @@ BEGIN {
 NR > 1 {
 
 	if (NR==2) { win = $3 - $2 + 1 }
-
-	if($4/100 > 0) { 
-		dmr_type = "hyper";
-	} else { 
-		dmr_type = "hypo";
-	}
-
+	
 	meth_diff = $4/100;
 	cov = $5;
 	cyt_count = $6;
 	if($7 == "") { ratio = 0 } else { ratio = $7 }
 
 	if( cov >= min_cov && cyt_count >= min_C && ratio >= min_ratio ) {
-
+	
+		if(meth_diff > 0) { 
+			dmr_type = "hyper";
+		} else { 
+			dmr_type = "hypo";
+		}
 
 		chr = $1;
 		start = $2;
